@@ -1,0 +1,20 @@
+{
+	"name": "Cheer",
+	"author": "Nomosiki",
+	"description": "Both arms up",
+	"emote": {
+		"beginTick": 0,
+		"endTick": 40,
+		"stopTick": 45,
+		"isLoop": true,
+		"returnTick": 8,
+		"degrees": true,
+		"moves": [
+			{ "tick": 0, "leftArm": { "pitch": 0, "roll": 0 }, "rightArm": { "pitch": 0, "roll": 0 } },
+			{ "tick": 8, "leftArm": { "pitch": -170, "roll": 20 }, "rightArm": { "pitch": -170, "roll": -20 } },
+			{ "tick": 20, "leftArm": { "pitch": -150, "roll": 10 }, "rightArm": { "pitch": -150, "roll": -10 } },
+			{ "tick": 32, "leftArm": { "pitch": -170, "roll": 20 }, "rightArm": { "pitch": -170, "roll": -20 } },
+			{ "tick": 40, "leftArm": { "pitch": -150, "roll": 10 }, "rightArm": { "pitch": -150, "roll": -10 } }
+		]
+	}
+}

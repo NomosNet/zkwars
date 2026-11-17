@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "nomosiki:captain_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.nomosiki.helm.title"
+    },
+    "description": {
+      "translate": "advancements.nomosiki.helm.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "helm"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "nomosiki:hire"
+}

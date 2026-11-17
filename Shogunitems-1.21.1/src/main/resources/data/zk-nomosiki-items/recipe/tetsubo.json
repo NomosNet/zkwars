@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "W": {
+      "item": "zk-nomosiki-items:katana_handle"
+    }
+  },
+  "pattern": [
+    " SS",
+    "SSS",
+    "WS "
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:tetsubo"
+  }
+}

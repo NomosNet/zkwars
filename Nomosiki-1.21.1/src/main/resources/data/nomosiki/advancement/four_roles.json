@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "nomosiki:knight_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.nomosiki.four_roles.title"
+    },
+    "description": {
+      "translate": "advancements.nomosiki.four_roles.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "four_roles"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "nomosiki:hire"
+}

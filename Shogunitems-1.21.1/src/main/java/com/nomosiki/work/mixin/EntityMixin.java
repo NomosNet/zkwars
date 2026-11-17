@@ -1,0 +1,30 @@
+package com.nomosiki.work.mixin;
+
+import com.nomosiki.work.gun.GunItem;
+import com.nomosiki.work.gun.GunItems;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.AbstractSkeleton;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(Entity.class)
+abstract class EntityMixin {
+	@Inject(
+		method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;",
+		at = @At("HEAD"),
+		cancellable = true)
+	private void nomosikiReplaceSkeletonArrows(ItemStack stack, CallbackInfoReturnable<ItemEntity> ci) {
+		Object object = this;
+		if (stack.getItem() == Items.ARROW
+			&& object instanceof AbstractSkeleton entity
+			&& GunItem.isHoldingGun(entity)) {
+			ItemStack cartridges = new ItemStack(GunItems.CARTRIDGE, stack.getCount());
+			ci.setReturnValue(entity.spawnAtLocation(cartridges, 0.0F));
+		}
+	}
+}

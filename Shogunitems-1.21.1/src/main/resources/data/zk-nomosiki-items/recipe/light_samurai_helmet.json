@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "W": {
+      "item": "zk-nomosiki-items:straw_hat"
+    },
+    "L": {
+      "tag": "c:ingots/steel"
+    }
+  },
+  "pattern": [
+    " L ",
+    "LWL",
+    " L "
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:light_samurai_helmet"
+  }
+}

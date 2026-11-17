@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "zk-workers:courier_scroll"
+    },
+    "title": {
+      "translate": "advancements.zk-workers.courier_route.title"
+    },
+    "description": {
+      "translate": "advancements.zk-workers.courier_route.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "courier_route"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zk-workers:courier_scroll"
+}

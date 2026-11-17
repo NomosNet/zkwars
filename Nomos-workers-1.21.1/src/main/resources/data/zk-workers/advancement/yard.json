@@ -1,0 +1,50 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:hay_block"
+    },
+    "title": {
+      "translate": "advancements.zk-workers.yard.title"
+    },
+    "description": {
+      "translate": "advancements.zk-workers.yard.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "harvest": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "farm_harvest"
+      }
+    },
+    "breed": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "pen_bred"
+      }
+    },
+    "supply": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "supply_delivered"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "harvest"
+    ],
+    [
+      "breed"
+    ],
+    [
+      "supply"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zk-workers:working"
+}

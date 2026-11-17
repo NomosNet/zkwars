@@ -1,0 +1,33 @@
+{
+  "replace": false,
+  "values": [
+    "zk-nomosiki-items:katana",
+    "zk-nomosiki-items:wakizashi",
+    "zk-nomosiki-items:odachi",
+    "zk-nomosiki-items:naginata",
+    "zk-nomosiki-items:nagamaki",
+    "zk-nomosiki-items:shuko",
+    "zk-nomosiki-items:tetsubo",
+    "zk-nomosiki-items:tonbukiri",
+    "zk-nomosiki-items:kamayari",
+    "zk-nomosiki-items:masakari",
+    "zk-nomosiki-items:kunai",
+    "zk-nomosiki-items:sai",
+    "zk-nomosiki-items:kabutowari",
+    "zk-nomosiki-items:kama",
+    "zk-nomosiki-items:katana_netherite",
+    "zk-nomosiki-items:wakizashi_netherite",
+    "zk-nomosiki-items:odachi_netherite",
+    "zk-nomosiki-items:naginata_netherite",
+    "zk-nomosiki-items:nagamaki_netherite",
+    "zk-nomosiki-items:shuko_netherite",
+    "zk-nomosiki-items:tetsubo_netherite",
+    "zk-nomosiki-items:tonbukiri_netherite",
+    "zk-nomosiki-items:kamayari_netherite",
+    "zk-nomosiki-items:masakari_netherite",
+    "zk-nomosiki-items:kunai_netherite",
+    "zk-nomosiki-items:sai_netherite",
+    "zk-nomosiki-items:kabutowari_netherite",
+    "zk-nomosiki-items:kama_netherite"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+	"name": "Point",
+	"author": "Nomosiki",
+	"description": "Point forward",
+	"emote": {
+		"beginTick": 0,
+		"endTick": 30,
+		"stopTick": 34,
+		"degrees": true,
+		"moves": [
+			{ "tick": 0, "rightArm": { "pitch": 0, "yaw": 0 } },
+			{ "tick": 10, "rightArm": { "pitch": -90, "yaw": -5 } },
+			{ "tick": 22, "rightArm": { "pitch": -90, "yaw": -5 } },
+			{ "tick": 30, "rightArm": { "pitch": 0, "yaw": 0 } }
+		]
+	}
+}

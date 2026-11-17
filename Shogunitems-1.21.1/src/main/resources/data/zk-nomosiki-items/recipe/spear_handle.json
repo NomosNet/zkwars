@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "X": {
+      "item": "zk-nomosiki-items:katana_handle"
+    }
+  },
+  "pattern": [
+    "  S",
+    " X ",
+    "S  "
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:spear_handle"
+  }
+}

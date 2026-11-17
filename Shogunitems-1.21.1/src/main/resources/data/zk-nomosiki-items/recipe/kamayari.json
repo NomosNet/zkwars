@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "G": {
+      "tag": "c:nuggets/steel"
+    },
+    "W": {
+      "item": "zk-nomosiki-items:katana_handle"
+    }
+  },
+  "pattern": [
+    " GS",
+    " SG",
+    "W  "
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:kamayari"
+  }
+}

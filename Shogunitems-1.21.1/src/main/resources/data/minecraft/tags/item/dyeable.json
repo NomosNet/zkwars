@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "zk-nomosiki-items:steel_samurai_helmet",
+    "zk-nomosiki-items:steel_samurai_chestplate",
+    "zk-nomosiki-items:steel_samurai_leggings",
+    "zk-nomosiki-items:steel_samurai_boots",
+    "zk-nomosiki-items:iron_samurai_helmet",
+    "zk-nomosiki-items:iron_samurai_chestplate",
+    "zk-nomosiki-items:iron_samurai_leggings",
+    "zk-nomosiki-items:iron_samurai_boots"
+  ]
+}

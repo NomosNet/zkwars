@@ -1,0 +1,117 @@
+package com.nomosiki.work.mixin;
+
+import com.nomosiki.work.NomosikiWork;
+import com.nomosiki.work.gun.Config;
+import com.nomosiki.work.gun.GunItem;
+import com.nomosiki.work.gun.RangedGunAttackGoal;
+import com.nomosiki.work.gun.VanillaHelper;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.RangedCrossbowAttackGoal;
+import net.minecraft.world.entity.monster.AbstractIllager;
+import net.minecraft.world.entity.monster.Pillager;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootTable;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(Pillager.class)
+abstract class PillagerMixin {
+	@Unique
+	private static final ResourceKey<LootTable> NOMOSIKI_PILLAGER_WEAPON =
+		ResourceKey.create(Registries.LOOT_TABLE, NomosikiWork.id("pillager_weapon"));
+
+	@Inject(method = "registerGoals", at = @At("TAIL"))
+	private void nomosikiRegisterGunGoal(CallbackInfo ci) {
+		Pillager pillager = (Pillager) (Object) this;
+		((MobAccessor) pillager).nomosiki$getGoalSelector().addGoal(3, new RangedGunAttackGoal<>(pillager) {
+			private static final double SPEED_MODIFIER = 1.0;
+			private static final float ATTACK_RADIUS = 8.0f;
+			private int seeTime;
+			private int attackDelay;
+			private int updatePathDelay;
+
+			@Override
+			public void tick() {
+				super.tick();
+				LivingEntity target = mob.getTarget();
+				if (target == null) {
+					return;
+				}
+				boolean canSee = mob.getSensing().hasLineOfSight(target);
+				boolean wasSeeing = seeTime > 0;
+				if (canSee != wasSeeing) {
+					seeTime = 0;
+				}
+				if (canSee) {
+					seeTime++;
+				} else {
+					seeTime--;
+				}
+				float dist = mob.distanceTo(target);
+				boolean walk = (dist > ATTACK_RADIUS || seeTime < 5) && attackDelay == 0;
+				if (walk) {
+					updatePathDelay--;
+					if (updatePathDelay <= 0) {
+						boolean canRun = !isReady() && !isLoading();
+						mob.getNavigation().moveTo(target, canRun ? SPEED_MODIFIER : SPEED_MODIFIER * 0.5);
+						updatePathDelay = RangedCrossbowAttackGoal.PATHFINDING_DELAY_RANGE.sample(mob.getRandom());
+					}
+				} else {
+					updatePathDelay = 0;
+					mob.getNavigation().stop();
+				}
+				mob.getLookControl().setLookAt(target, 30.0f, 30.0f);
+				if (isReady()) {
+					if (attackDelay > 0) {
+						attackDelay--;
+					} else if (canSee) {
+						fire(2.0f);
+					}
+				} else if (!walk) {
+					reload();
+				}
+			}
+
+			@Override
+			public void onReady() {
+				attackDelay = 20 + mob.getRandom().nextInt(20);
+			}
+
+			@Override
+			public void stop() {
+				super.stop();
+				seeTime = 0;
+			}
+		});
+	}
+
+	@Inject(method = "populateDefaultEquipmentSlots", at = @At("TAIL"))
+	private void nomosikiPopulateGun(RandomSource random, DifficultyInstance difficulty, CallbackInfo ci) {
+		Pillager pillager = (Pillager) (Object) this;
+		if (pillager.getRandom().nextFloat() < Config.pistolPillagerChance) {
+			ItemStack weapon = VanillaHelper.getRandomWeapon(pillager, NOMOSIKI_PILLAGER_WEAPON);
+			if (!weapon.isEmpty()) {
+				pillager.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+			}
+		}
+	}
+
+	@Inject(method = "getArmPose", at = @At("HEAD"), cancellable = true)
+	private void nomosikiGunArmPose(CallbackInfoReturnable<AbstractIllager.IllagerArmPose> ci) {
+		Pillager pillager = (Pillager) (Object) this;
+		if (GunItem.isHoldingGun(pillager)) {
+			ci.setReturnValue(pillager.isUsingItem()
+				? AbstractIllager.IllagerArmPose.CROSSBOW_CHARGE
+				: AbstractIllager.IllagerArmPose.CROSSBOW_HOLD);
+		}
+	}
+}

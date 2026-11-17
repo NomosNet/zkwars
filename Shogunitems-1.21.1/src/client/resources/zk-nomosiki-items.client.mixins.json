@@ -1,0 +1,22 @@
+{
+	"required": true,
+	"package": "com.nomosiki.work.client.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"refmap": "client-zk-nomosiki-items.refmap.json",
+	"client": [
+		"AbstractClientPlayerMixin",
+		"HumanoidModelMixin",
+		"ItemInHandRendererMixin",
+		"LocalPlayerMixin",
+		"MinecraftMixin",
+		"MultiPlayerGameModeMixin",
+		"PlayerMixin",
+		"SkeletonModelMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

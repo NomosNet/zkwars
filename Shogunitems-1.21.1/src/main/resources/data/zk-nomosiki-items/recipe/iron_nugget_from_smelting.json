@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "ingredient": [
+    {
+      "item": "zk-nomosiki-items:musket"
+    },
+    {
+      "item": "zk-nomosiki-items:musket_with_bayonet"
+    },
+    {
+      "item": "zk-nomosiki-items:musket_with_scope"
+    },
+    {
+      "item": "zk-nomosiki-items:blunderbuss"
+    },
+    {
+      "item": "zk-nomosiki-items:pistol"
+    }
+  ],
+  "result": {
+    "id": "minecraft:iron_nugget"
+  }
+}

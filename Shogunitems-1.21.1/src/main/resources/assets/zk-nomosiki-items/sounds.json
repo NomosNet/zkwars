@@ -1,0 +1,60 @@
+{
+  "musket_load0": {
+    "sounds": [
+      "zk-nomosiki-items:musket_load0"
+    ]
+  },
+  "musket_load1": {
+    "sounds": [
+      "zk-nomosiki-items:musket_load1"
+    ]
+  },
+  "musket_load2": {
+    "sounds": [
+      "zk-nomosiki-items:musket_load2"
+    ]
+  },
+  "musket_ready": {
+    "sounds": [
+      "zk-nomosiki-items:musket_ready"
+    ]
+  },
+  "musket_fire": {
+    "sounds": [
+      "zk-nomosiki-items:musket_fire"
+    ]
+  },
+  "blunderbuss_fire": {
+    "sounds": [
+      "zk-nomosiki-items:blunderbuss_fire"
+    ]
+  },
+  "blunderbuss_fire_flame": {
+    "sounds": [
+      "zk-nomosiki-items:blunderbuss_fire_flame"
+    ]
+  },
+  "pistol_fire": {
+    "sounds": [
+      "zk-nomosiki-items:pistol_fire"
+    ]
+  },
+  "dispenser_fire": {
+    "sounds": [
+      "zk-nomosiki-items:dispenser_fire"
+    ]
+  },
+  "bullet_fly_by": {
+    "sounds": [
+      "zk-nomosiki-items:bullet_fly_by1",
+      "zk-nomosiki-items:bullet_fly_by2",
+      "zk-nomosiki-items:bullet_fly_by3"
+    ]
+  },
+  "bullet_water_hit": {
+    "sounds": [
+      "zk-nomosiki-items:bullet_water_hit1",
+      "zk-nomosiki-items:bullet_water_hit2"
+    ]
+  }
+}

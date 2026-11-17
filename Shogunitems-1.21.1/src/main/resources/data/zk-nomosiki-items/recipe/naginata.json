@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "W": {
+      "item": "zk-nomosiki-items:spear_handle"
+    }
+  },
+  "pattern": [
+    "  S",
+    "SS ",
+    "WS "
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:naginata"
+  }
+}

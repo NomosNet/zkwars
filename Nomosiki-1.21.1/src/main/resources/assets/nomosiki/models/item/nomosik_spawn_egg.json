@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "nomosiki:item/nomosik_spawn_egg"
+  }
+}

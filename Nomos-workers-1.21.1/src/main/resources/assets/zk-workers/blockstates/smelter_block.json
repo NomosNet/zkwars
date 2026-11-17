@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "zk-workers:block/smelter_block" }
+  }
+}

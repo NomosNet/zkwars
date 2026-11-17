@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "X": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "X X",
+    "X X",
+    " X "
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:iron_samurai_boots"
+  },
+  "category": "equipment"
+}

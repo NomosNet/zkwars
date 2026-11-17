@@ -1,0 +1,5 @@
+# Live Minecraft world lock
+map/**/session.lock
+
+# Local checkout of https://github.com/KosmX/emotes, kept for reference only
+Nomosiki-1.21.1/idea/emotes/

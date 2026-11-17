@@ -1,0 +1,131 @@
+{
+  "display": {
+    "icon": {
+      "id": "zk-workers:human_miner_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.zk-workers.all_people.title"
+    },
+    "description": {
+      "translate": "advancements.zk-workers.all_people.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "assigned_quarry": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_quarry"
+      }
+    },
+    "assigned_farmer": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_farmer"
+      }
+    },
+    "assigned_lumberjack": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_lumberjack"
+      }
+    },
+    "assigned_chicken": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_chicken"
+      }
+    },
+    "assigned_cow": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_cow"
+      }
+    },
+    "assigned_sheep": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_sheep"
+      }
+    },
+    "assigned_pig": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_pig"
+      }
+    },
+    "assigned_builder": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_builder"
+      }
+    },
+    "assigned_smelter": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_smelter"
+      }
+    },
+    "assigned_fisher": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_fisher"
+      }
+    },
+    "assigned_crafter": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_crafter"
+      }
+    },
+    "assigned_courier": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "assigned_courier"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "assigned_quarry"
+    ],
+    [
+      "assigned_farmer"
+    ],
+    [
+      "assigned_lumberjack"
+    ],
+    [
+      "assigned_chicken"
+    ],
+    [
+      "assigned_cow"
+    ],
+    [
+      "assigned_sheep"
+    ],
+    [
+      "assigned_pig"
+    ],
+    [
+      "assigned_builder"
+    ],
+    [
+      "assigned_smelter"
+    ],
+    [
+      "assigned_fisher"
+    ],
+    [
+      "assigned_crafter"
+    ],
+    [
+      "assigned_courier"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zk-workers:working"
+}

@@ -1,0 +1,37 @@
+{
+	"name": "Shrug",
+	"author": "Nomosiki",
+	"description": "Confused shrug",
+	"emote": {
+		"beginTick": 0,
+		"endTick": 36,
+		"stopTick": 40,
+		"degrees": true,
+		"moves": [
+			{
+				"tick": 0,
+				"leftArm": { "pitch": 0, "roll": 0 },
+				"rightArm": { "pitch": 0, "roll": 0 },
+				"head": { "yaw": 0 }
+			},
+			{
+				"tick": 10,
+				"leftArm": { "pitch": -30, "roll": 70 },
+				"rightArm": { "pitch": -30, "roll": -70 },
+				"head": { "yaw": 15 }
+			},
+			{
+				"tick": 26,
+				"leftArm": { "pitch": -30, "roll": 70 },
+				"rightArm": { "pitch": -30, "roll": -70 },
+				"head": { "yaw": -15 }
+			},
+			{
+				"tick": 36,
+				"leftArm": { "pitch": 0, "roll": 0 },
+				"rightArm": { "pitch": 0, "roll": 0 },
+				"head": { "yaw": 0 }
+			}
+		]
+	}
+}

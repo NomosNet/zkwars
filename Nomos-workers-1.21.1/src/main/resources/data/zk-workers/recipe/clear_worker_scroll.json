@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "zk-workers:worker_scroll"
+    }
+  ],
+  "result": {
+    "id": "zk-workers:worker_scroll",
+    "count": 1
+  }
+}

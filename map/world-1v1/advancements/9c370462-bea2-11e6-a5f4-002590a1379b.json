@@ -1,0 +1,33 @@
+{
+  "minecraft:recipes/decorations/crafting_table": {
+    "criteria": {
+      "unlock_right_away": "2026-11-17 07:17:00 +0300"
+    },
+    "done": true
+  },
+  "zk-workers:root": {
+    "criteria": {
+      "tick": "2026-11-17 07:17:00 +0300"
+    },
+    "done": true
+  },
+  "minecraft:end/root": {
+    "criteria": {
+      "entered_end": "2026-11-17 07:17:41 +0300"
+    },
+    "done": true
+  },
+  "nomosiki:root": {
+    "criteria": {
+      "tick": "2026-11-17 07:17:00 +0300"
+    },
+    "done": true
+  },
+  "minecraft:story/enter_the_end": {
+    "criteria": {
+      "entered_end": "2026-11-17 07:17:41 +0300"
+    },
+    "done": true
+  },
+  "DataVersion": 3955
+}

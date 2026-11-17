@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zk-nomosiki-items:item/light_samurai_chestplate"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:blast_furnace"
+    },
+    "title": {
+      "translate": "advancements.zk-workers.smelter_ten.title"
+    },
+    "description": {
+      "translate": "advancements.zk-workers.smelter_ten.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "smelter_ten"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zk-workers:smelt_returned"
+}

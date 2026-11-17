@@ -1,0 +1,19 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.nomosiki.client.mixin.rts",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"CameraMixin",
+		"GameRendererMixin",
+		"GuiMixin",
+		"KeyboardHandlerMixin",
+		"LocalPlayerMixin",
+		"MinecraftMixin",
+		"MouseHandlerMixin",
+		"ScreenThemeMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

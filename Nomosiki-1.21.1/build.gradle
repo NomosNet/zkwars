@@ -1,0 +1,200 @@
+plugins {
+	id 'fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		"nomosiki" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Fabric API. This is technically optional, but you probably want it anyway.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	modCompileOnly files("libs/siege-machines-1.21.1-fabric-1.39.jar")
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+	inputs.property "archivesName", project.base.archivesName
+
+	from("LICENSE") {
+		rename { "${it}_${inputs.properties.archivesName}"}
+	}
+}
+
+// Phase 4 placeholders: copy vanilla steve.png → race-named files (replace with real art later).
+tasks.register('nomosikPopulateRaceSkinFiles') {
+	group = 'nomosiki'
+	description = 'Copy vanilla steve.png into assets/nomosiki/textures/entity/race/{default,british,spanish}/human.png'
+	notCompatibleWithConfigurationCache('uses loom minecraft jar at execution time')
+	doLast {
+		def jars = loom.minecraftProvider.getMinecraftJars()
+		def pathOrFile = jars.isEmpty() ? null : jars.iterator().next()
+		File mcJar = pathOrFile == null ? null : (pathOrFile instanceof File ? pathOrFile : pathOrFile.toFile())
+		if (mcJar == null || !mcJar.exists()) {
+			throw new GradleException('Minecraft jar not found (loom.minecraftProvider.getMinecraftJars()). Run a compile first.')
+		}
+		File extractRoot = layout.buildDirectory.dir('tmp/nomosik-steve-extract').get().asFile
+		delete extractRoot
+		extractRoot.mkdirs()
+		copy {
+			from(zipTree(mcJar))
+			into extractRoot
+			include 'assets/minecraft/textures/entity/player/wide/steve.png'
+		}
+		File steve = new File(extractRoot, 'assets/minecraft/textures/entity/player/wide/steve.png')
+		if (!steve.exists()) {
+			throw new GradleException('steve.png not found inside Minecraft jar at assets/minecraft/textures/entity/player/wide/steve.png')
+		}
+		List<String> families = ['default', 'british', 'spanish']
+		for (String fam : families) {
+			File destDir = file("src/main/resources/assets/nomosiki/textures/entity/race/${fam}")
+			destDir.mkdirs()
+			File dest = new File(destDir, "human.png")
+			java.nio.file.Files.copy(steve.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+		}
+		println 'Nomosiki human skin placeholders written to src/main/resources/assets/nomosiki/textures/entity/race/'
+	}
+}
+
+/** Copies built jar + bundled dependency jars into ../mods/server and ../mods/client. */
+tasks.register('syncModpack') {
+	group = 'nomosiki'
+	description = 'Fill ../mods/server and ../mods/client from build/libs and ../mods/*.jar'
+	dependsOn build
+	notCompatibleWithConfigurationCache('reads ../mods at execution time')
+	doLast {
+		def modsRoot = rootProject.file('../mods')
+		def serverDir = new File(modsRoot, 'server')
+		def clientDir = new File(modsRoot, 'client')
+		serverDir.mkdirs()
+		clientDir.mkdirs()
+
+		// Clear previous jars so re-runs stay deterministic.
+		[serverDir, clientDir].each { dir ->
+			dir.listFiles()?.findAll { it.name.endsWith('.jar') }?.each { it.delete() }
+		}
+
+		def clientOnlyTokens = [
+			'sodium',
+			'immediatelyfast',
+			'entity_model_features',
+			'entity_texture_features',
+			'female-gender'
+		]
+		def serverTokens = [
+			'fabric-api',
+			'cloth-config',
+			'lithium',
+			'ferritecore',
+			'async-fabric'
+		]
+
+		modsRoot.listFiles()?.each { File jar ->
+			if (!jar.name.endsWith('.jar')) {
+				return
+			}
+			if (jar.parentFile.name in ['server', 'client']) {
+				return
+			}
+			String lower = jar.name.toLowerCase()
+			boolean clientOnly = clientOnlyTokens.any { lower.contains(it) }
+			if (clientOnly) {
+				copy {
+					from jar
+					into clientDir
+				}
+				return
+			}
+			boolean serverMod = serverTokens.any { lower.contains(it) }
+			if (serverMod) {
+				copy {
+					from jar
+					into serverDir
+				}
+				copy {
+					from jar
+					into clientDir
+				}
+			}
+		}
+
+		def builtJar = layout.buildDirectory.file("libs/${project.archives_base_name}-${project.version}.jar").get().asFile
+		if (!builtJar.exists()) {
+			throw new GradleException("Built jar not found: ${builtJar}")
+		}
+		copy {
+			from builtJar
+			into serverDir
+		}
+		copy {
+			from builtJar
+			into clientDir
+		}
+		println "Modpack synced: ${serverDir} (server), ${clientDir} (client)"
+		println "Nomosiki jar: ${builtJar.name}"
+	}
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
+}

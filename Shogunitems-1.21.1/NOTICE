@@ -1,0 +1,21 @@
+Nomosiki-work credits
+=====================
+
+Item stats, durability, and crafting patterns follow Samurai Dynasty
+(https://github.com/VeroxUniverse/SamuraiDynasty-neoforge) by VeroxUniverse,
+licensed GNU Lesser General Public License v3.0.
+
+Armor and weapon visuals (png/geo/item models) are from Samurai Dynasty,
+included with permission from VeroxUniverse.
+
+Armor visual designs in the original mod were credited to:
+https://minecraft-garage.com/
+
+Flintlock guns, cartridges, bullets, and combat logic are adapted from
+ewewukek's Musket Mod (https://github.com/ewewukek/mc-musketmod), MIT License.
+See LICENSE_MUSKETMOD.txt. Sounds retain the original credits in
+src/main/resources/assets/nomosiki-work/sounds/credits.txt.
+
+Flintlock 3D models and item textures are from Flintl0cks v1.2
+by Scarecrow01 aka Flintl0ck.
+

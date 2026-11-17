@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "zk-nomosiki-items:item/steel_samurai_boots",
+    "layer1": "zk-nomosiki-items:item/netherite_samurai_boots_overlay"
+  }
+}

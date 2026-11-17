@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "zk-nomosiki-items:steel_ingot"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "zk-nomosiki-items:steel_nugget"
+  }
+}

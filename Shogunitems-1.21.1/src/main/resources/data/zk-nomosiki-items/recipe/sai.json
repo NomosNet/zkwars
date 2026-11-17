@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "N": {
+      "tag": "c:nuggets/steel"
+    },
+    "W": {
+      "item": "zk-nomosiki-items:knive_handle"
+    }
+  },
+  "pattern": [
+    "N",
+    "S",
+    "W"
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:sai"
+  }
+}

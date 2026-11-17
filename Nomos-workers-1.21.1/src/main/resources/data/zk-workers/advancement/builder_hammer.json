@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "id": "zk-workers:builder_hammer"
+    },
+    "title": {
+      "translate": "advancements.zk-workers.builder_hammer.title"
+    },
+    "description": {
+      "translate": "advancements.zk-workers.builder_hammer.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "zk-workers:builder_hammer"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zk-workers:builder"
+}

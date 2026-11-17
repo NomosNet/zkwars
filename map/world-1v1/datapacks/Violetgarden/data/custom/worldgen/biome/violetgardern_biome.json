@@ -1,0 +1,23 @@
+{
+  "temperature": 30,
+  "downfall": 0,
+  "has_precipitation": false,
+  "effects": {
+    "sky_color": 9863888,
+    "fog_color": 9863888,
+    "water_color": 11835100,
+    "water_fog_color": 11835100,
+    "grass_color": 10647485,
+    "foliage_color": 10647485,
+    "particle": {
+      "options": {
+        "type": "minecraft:falling_obsidian_tear"
+      },
+      "probability": 0.001
+    }
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": []
+}

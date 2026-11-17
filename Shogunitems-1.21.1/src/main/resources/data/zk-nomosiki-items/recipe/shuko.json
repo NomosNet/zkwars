@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "I": {
+      "tag": "c:nuggets/steel"
+    },
+    "W": {
+      "item": "zk-nomosiki-items:katana_handle"
+    }
+  },
+  "pattern": [
+    "I I",
+    "S S",
+    "SWS"
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:shuko"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:porkchop"
+    },
+    "title": {
+      "translate": "advancements.zk-workers.pen_pork.title"
+    },
+    "description": {
+      "translate": "advancements.zk-workers.pen_pork.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zk-workers:action",
+      "conditions": {
+        "action": "pen_pork"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zk-workers:pen"
+}

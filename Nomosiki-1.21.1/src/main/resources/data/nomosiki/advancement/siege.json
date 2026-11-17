@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "nomosiki:artillerist_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.nomosiki.siege.title"
+    },
+    "description": {
+      "translate": "advancements.nomosiki.siege.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "siege"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "nomosiki:hire"
+}

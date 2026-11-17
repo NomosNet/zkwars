@@ -1,0 +1,203 @@
+{
+  "display": {
+    "icon": {
+      "id": "nomosiki:samurai_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.nomosiki.all_branches.title"
+    },
+    "description": {
+      "translate": "advancements.nomosiki.all_branches.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "hired_infantry": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_infantry"
+      }
+    },
+    "hired_archer": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_archer"
+      }
+    },
+    "hired_knight": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_knight"
+      }
+    },
+    "hired_samurai": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_samurai"
+      }
+    },
+    "hired_samurai_archer": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_samurai_archer"
+      }
+    },
+    "hired_samurai_cavalry": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_samurai_cavalry"
+      }
+    },
+    "hired_samurai_archer_cavalry": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_samurai_archer_cavalry"
+      }
+    },
+    "hired_nomad": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_nomad"
+      }
+    },
+    "hired_british": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_british"
+      }
+    },
+    "hired_spanish": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_spanish"
+      }
+    },
+    "hired_ninja": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_ninja"
+      }
+    },
+    "hired_monk": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_monk"
+      }
+    },
+    "hired_monk_archer": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_monk_archer"
+      }
+    },
+    "hired_monk_cavalry": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_monk_cavalry"
+      }
+    },
+    "hired_artillerist": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_artillerist"
+      }
+    },
+    "hired_spanish_artillerist": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_spanish_artillerist"
+      }
+    },
+    "hired_ashigaru_musketeer": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_ashigaru_musketeer"
+      }
+    },
+    "hired_samurai_musketeer": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_samurai_musketeer"
+      }
+    },
+    "hired_british_musketeer": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_british_musketeer"
+      }
+    },
+    "hired_captain": {
+      "trigger": "nomosiki:action",
+      "conditions": {
+        "action": "hired_captain"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "hired_infantry"
+    ],
+    [
+      "hired_archer"
+    ],
+    [
+      "hired_knight"
+    ],
+    [
+      "hired_samurai"
+    ],
+    [
+      "hired_samurai_archer"
+    ],
+    [
+      "hired_samurai_cavalry"
+    ],
+    [
+      "hired_samurai_archer_cavalry"
+    ],
+    [
+      "hired_nomad"
+    ],
+    [
+      "hired_british"
+    ],
+    [
+      "hired_spanish"
+    ],
+    [
+      "hired_ninja"
+    ],
+    [
+      "hired_monk"
+    ],
+    [
+      "hired_monk_archer"
+    ],
+    [
+      "hired_monk_cavalry"
+    ],
+    [
+      "hired_artillerist"
+    ],
+    [
+      "hired_spanish_artillerist"
+    ],
+    [
+      "hired_ashigaru_musketeer"
+    ],
+    [
+      "hired_samurai_musketeer"
+    ],
+    [
+      "hired_british_musketeer"
+    ],
+    [
+      "hired_captain"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "nomosiki:four_roles"
+}

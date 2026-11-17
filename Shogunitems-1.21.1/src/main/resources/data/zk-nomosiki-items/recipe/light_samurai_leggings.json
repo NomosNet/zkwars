@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "X": {
+      "tag": "c:ingots/steel"
+    },
+    "G": {
+      "item": "zk-nomosiki-items:cloth"
+    }
+  },
+  "pattern": [
+    "XGX",
+    "G G",
+    "G G"
+  ],
+  "result": {
+    "id": "zk-nomosiki-items:light_samurai_leggings"
+  },
+  "category": "equipment"
+}
