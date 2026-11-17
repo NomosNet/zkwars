@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:iron_hoe"
+    },
+    "title": {
+      "translate": "advancements.zkwars-workers.farm_till.title"
+    },
+    "description": {
+      "translate": "advancements.zkwars-workers.farm_till.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zkwars-workers:action",
+      "conditions": {
+        "action": "farm_tilled"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zkwars-workers:farm"
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "G": {
+      "tag": "c:nuggets/steel"
+    },
+    "W": {
+      "item": "zkwars-items:katana_handle"
+    }
+  },
+  "pattern": [
+    "  S",
+    "GS ",
+    "WG "
+  ],
+  "result": {
+    "id": "zkwars-items:wakizashi"
+  }
+}

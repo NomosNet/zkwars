@@ -1,0 +1,39 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:white_banner"
+    },
+    "title": {
+      "translate": "advancements.nomosiki.faction.title"
+    },
+    "description": {
+      "translate": "advancements.nomosiki.faction.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "created": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "faction_created"
+      }
+    },
+    "joined": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "faction_joined"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "created",
+      "joined"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zkwars:root"
+}

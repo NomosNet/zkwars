@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "top": "zk-workers:block/cow_breeder_table_top",
-    "bottom": "zk-workers:block/cow_breeder_table_bottom",
-    "side": "zk-workers:block/cow_breeder_table_side"
-  }
-}

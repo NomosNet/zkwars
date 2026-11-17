@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "zkwars-workers:block/farmer_block" }
+  }
+}

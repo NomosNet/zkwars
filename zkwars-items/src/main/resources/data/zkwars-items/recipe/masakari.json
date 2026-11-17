@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "tag": "c:ingots/steel"
+    },
+    "N": {
+      "tag": "c:nuggets/steel"
+    },
+    "W": {
+      "item": "zkwars-items:knive_handle"
+    }
+  },
+  "pattern": [
+    "SS",
+    "NS",
+    "W "
+  ],
+  "result": {
+    "id": "zkwars-items:masakari"
+  }
+}

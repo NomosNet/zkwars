@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "X": {
+      "tag": "c:ingots/steel"
+    }
+  },
+  "pattern": [
+    " X ",
+    "XXX",
+    "X X"
+  ],
+  "result": {
+    "id": "zkwars-items:steel_samurai_helmet"
+  },
+  "category": "equipment"
+}

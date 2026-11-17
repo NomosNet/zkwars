@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "top": "zk-workers:block/crafter_table_top",
-    "bottom": "zk-workers:block/crafter_table_bottom",
-    "side": "zk-workers:block/crafter_table_side"
-  }
-}

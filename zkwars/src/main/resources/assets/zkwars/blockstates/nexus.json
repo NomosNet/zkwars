@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "team=red": { "model": "zkwars:block/nexus_red" },
+    "team=blue": { "model": "zkwars:block/nexus_blue" }
+  }
+}

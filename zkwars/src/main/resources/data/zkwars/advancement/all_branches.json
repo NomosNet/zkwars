@@ -1,0 +1,65 @@
+{
+  "display": {
+    "icon": {
+      "id": "zkwars:nomosik_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.nomosiki.all_branches.title"
+    },
+    "description": {
+      "translate": "advancements.nomosiki.all_branches.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "hired_infantry": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "hired_infantry"
+      }
+    },
+    "hired_archer": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "hired_archer"
+      }
+    },
+    "hired_knight": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "hired_knight"
+      }
+    },
+    "hired_nomad": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "hired_nomad"
+      }
+    },
+    "hired_artillerist": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "hired_artillerist"
+      }
+    },
+    "hired_captain": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "hired_captain"
+      }
+    }
+  },
+  "requirements": [
+    ["hired_infantry"],
+    ["hired_archer"],
+    ["hired_knight"],
+    ["hired_nomad"],
+    ["hired_artillerist"],
+    ["hired_captain"]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zkwars:four_roles"
+}

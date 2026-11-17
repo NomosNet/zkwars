@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "zkwars-workers:block/pig_breeder_table_top",
+    "bottom": "zkwars-workers:block/pig_breeder_table_bottom",
+    "side": "zkwars-workers:block/pig_breeder_table_side"
+  }
+}

@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "zkwars",
+	"version": "${version}",
+	"name": "ZK Wars",
+	"description": "ZK Wars 1.21.1: humans, orcs and dwarves, squads, factions, RTS command.",
+	"authors": [
+		"WorldofCraft9"
+	],
+	"license": "CC0-1.0",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.nomosiki.NomosikiMod"
+		],
+		"client": [
+			"com.nomosiki.client.NomosikiModClient"
+		]
+	},
+	"mixins": [
+		"zkwars.mixins.json",
+		"zkwars.rts.client.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"async": "*",
+		"lithium": "*",
+		"immersive_melodies": "*",
+		"siegemachines": "*",
+		"zk-ship": "*",
+		"zkwars-items": "*"
+	}
+}

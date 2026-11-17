@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "item": "zkwars-items:katana"
+    },
+    "G": {
+      "tag": "c:nuggets/steel"
+    },
+    "W": {
+      "item": "zkwars-items:spear_handle"
+    }
+  },
+  "pattern": [
+    "  G",
+    " S ",
+    "W  "
+  ],
+  "result": {
+    "id": "zkwars-items:nagamaki"
+  }
+}

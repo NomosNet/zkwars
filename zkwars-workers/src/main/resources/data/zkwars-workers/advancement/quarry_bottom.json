@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:bedrock"
+    },
+    "title": {
+      "translate": "advancements.zkwars-workers.quarry_bottom.title"
+    },
+    "description": {
+      "translate": "advancements.zkwars-workers.quarry_bottom.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zkwars-workers:action",
+      "conditions": {
+        "action": "quarry_bottom"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zkwars-workers:quarry_mined"
+}

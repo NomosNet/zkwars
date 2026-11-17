@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "zkwars:knight_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.nomosiki.four_roles.title"
+    },
+    "description": {
+      "translate": "advancements.nomosiki.four_roles.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zkwars:action",
+      "conditions": {
+        "action": "four_roles"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zkwars:hire"
+}

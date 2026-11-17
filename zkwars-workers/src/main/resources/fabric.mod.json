@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"id": "zkwars-workers",
+	"version": "${version}",
+	"name": "ZK Wars Workers",
+	"description": "Workers who work at job blocks, wear out tools, and sleep at night. Couriers move items between those blocks and chests.",
+	"authors": [
+		"ZK"
+	],
+	"license": "CC0-1.0",
+	"icon": "assets/zkwars-workers/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.example.ZKWorkers"
+		],
+		"client": [
+			"com.example.client.ZKWorkersClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"gensokyofood": "*",
+		"zkwars": "*",
+		"wildfire_gender": "*"
+	}
+}

@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "zkwars-workers:quarry_block",
+    "zkwars-workers:farmer_block",
+    "zkwars-workers:lumberjack_block",
+    "zkwars-workers:chicken_breeder_block",
+    "zkwars-workers:cow_breeder_block",
+    "zkwars-workers:sheep_breeder_block",
+    "zkwars-workers:pig_breeder_block",
+    "zkwars-workers:builder_block",
+    "zkwars-workers:smelter_block",
+    "zkwars-workers:fisher_block",
+    "zkwars-workers:crafter_block"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "zkwars-workers:courier_sort_scroll"
+    },
+    "title": {
+      "translate": "advancements.zkwars-workers.sort_route.title"
+    },
+    "description": {
+      "translate": "advancements.zkwars-workers.sort_route.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zkwars-workers:action",
+      "conditions": {
+        "action": "sort_assigned"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zkwars-workers:sort_scroll"
+}

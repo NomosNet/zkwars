@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "nomosiki:item/british_spawn_egg"
-  }
-}

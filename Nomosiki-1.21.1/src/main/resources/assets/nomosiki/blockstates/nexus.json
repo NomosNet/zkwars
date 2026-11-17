@@ -1,6 +1,0 @@
-{
-  "variants": {
-    "team=red": { "model": "nomosiki:block/nexus_red" },
-    "team=blue": { "model": "nomosiki:block/nexus_blue" }
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "top": "zk-workers:block/lumberjack_table_top",
-    "bottom": "zk-workers:block/lumberjack_table_bottom",
-    "side": "zk-workers:block/lumberjack_table_side"
-  }
-}

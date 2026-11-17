@@ -1,0 +1,60 @@
+{
+  "musket_load0": {
+    "sounds": [
+      "zkwars-items:musket_load0"
+    ]
+  },
+  "musket_load1": {
+    "sounds": [
+      "zkwars-items:musket_load1"
+    ]
+  },
+  "musket_load2": {
+    "sounds": [
+      "zkwars-items:musket_load2"
+    ]
+  },
+  "musket_ready": {
+    "sounds": [
+      "zkwars-items:musket_ready"
+    ]
+  },
+  "musket_fire": {
+    "sounds": [
+      "zkwars-items:musket_fire"
+    ]
+  },
+  "blunderbuss_fire": {
+    "sounds": [
+      "zkwars-items:blunderbuss_fire"
+    ]
+  },
+  "blunderbuss_fire_flame": {
+    "sounds": [
+      "zkwars-items:blunderbuss_fire_flame"
+    ]
+  },
+  "pistol_fire": {
+    "sounds": [
+      "zkwars-items:pistol_fire"
+    ]
+  },
+  "dispenser_fire": {
+    "sounds": [
+      "zkwars-items:dispenser_fire"
+    ]
+  },
+  "bullet_fly_by": {
+    "sounds": [
+      "zkwars-items:bullet_fly_by1",
+      "zkwars-items:bullet_fly_by2",
+      "zkwars-items:bullet_fly_by3"
+    ]
+  },
+  "bullet_water_hit": {
+    "sounds": [
+      "zkwars-items:bullet_water_hit1",
+      "zkwars-items:bullet_water_hit2"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:iron_ingot"
+    },
+    "title": {
+      "translate": "advancements.zkwars-workers.smelt_returned.title"
+    },
+    "description": {
+      "translate": "advancements.zkwars-workers.smelt_returned.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "zkwars-workers:action",
+      "conditions": {
+        "action": "smelt_returned"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "parent": "zkwars-workers:smelter_furnace"
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "X": {
+      "tag": "c:nuggets/steel"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    }
+  },
+  "pattern": [
+    " X ",
+    "LSX",
+    "XL "
+  ],
+  "result": {
+    "id": "zkwars-items:katana_handle"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "replace": false,
+  "values": [
+    "zkwars-items:katana",
+    "zkwars-items:wakizashi",
+    "zkwars-items:odachi",
+    "zkwars-items:naginata",
+    "zkwars-items:nagamaki",
+    "zkwars-items:shuko",
+    "zkwars-items:tetsubo",
+    "zkwars-items:tonbukiri",
+    "zkwars-items:kamayari",
+    "zkwars-items:masakari",
+    "zkwars-items:kunai",
+    "zkwars-items:sai",
+    "zkwars-items:kabutowari",
+    "zkwars-items:kama",
+    "zkwars-items:katana_netherite",
+    "zkwars-items:wakizashi_netherite",
+    "zkwars-items:odachi_netherite",
+    "zkwars-items:naginata_netherite",
+    "zkwars-items:nagamaki_netherite",
+    "zkwars-items:shuko_netherite",
+    "zkwars-items:tetsubo_netherite",
+    "zkwars-items:tonbukiri_netherite",
+    "zkwars-items:kamayari_netherite",
+    "zkwars-items:masakari_netherite",
+    "zkwars-items:kunai_netherite",
+    "zkwars-items:sai_netherite",
+    "zkwars-items:kabutowari_netherite",
+    "zkwars-items:kama_netherite"
+  ]
+}
