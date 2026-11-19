@@ -626,6 +626,21 @@ public class NomosikEntity extends PathfinderMob implements ExtendedScreenHandle
 		return hurt;
 	}
 
+	@Override
+	public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+		boolean hit = super.doHurtTarget(target);
+		if (hit && !this.level().isClientSide && this.getTags().contains("zkwars_match_anti_armor")
+			&& target instanceof NomosikEntity victim) {
+			boolean armored = victim.getSquadBranchType() == com.nomosiki.squad.SquadType.KNIGHT
+				|| victim.getSquadBranchType() == com.nomosiki.squad.SquadType.CAPTAIN
+				|| victim.getTags().contains("zkwars_match_elite");
+			if (armored) {
+				victim.hurt(this.damageSources().mobAttack(this), 6.0f);
+			}
+		}
+		return hit;
+	}
+
 	public boolean canApplyAutoTarget(LivingEntity candidate) { return NomosikAutoTarget.canApplyAutoTarget(this, candidate); }
 
 	/** Attacker who damaged this unit within {@link #RECENT_ATTACKER_TICKS}. */

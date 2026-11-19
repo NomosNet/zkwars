@@ -238,6 +238,9 @@ final class NomosikAutoTarget {
 		if (mode == NomosikCombatMode.RAID) {
 			return true;
 		}
+		if (ownerId != null && CombatRelation.isMatchEnemyTarget(ownerId, candidate)) {
+			return true;
+		}
 		if (ownerId != null && CombatRelation.isFactionEnemyTarget(ownerId, candidate)) {
 			return true;
 		}

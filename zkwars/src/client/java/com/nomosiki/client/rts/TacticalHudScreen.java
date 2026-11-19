@@ -4,11 +4,18 @@ import com.nomosiki.client.NomosikiModClient;
 import com.nomosiki.client.SquadClientState;
 import com.nomosiki.client.SquadCommandClient;
 import com.nomosiki.client.gui.SakuraStyle;
+import com.nomosiki.client.match.MatchClient;
+import com.nomosiki.client.match.MatchClientState;
+import com.nomosiki.client.match.MatchHqScreen;
 import com.nomosiki.config.NomosikiConfig;
 import com.nomosiki.entity.SquadOrder;
+import com.nomosiki.match.MatchPhase;
+import com.nomosiki.match.entity.BuildingHeartEntity;
+import com.nomosiki.network.match.payload.c2s.MatchBuildPlacePayload;
 import com.nomosiki.network.squad.payload.c2s.command.SquadDeployFormationPayload;
 import com.nomosiki.network.squad.payload.s2c.ClanArmyRosterPayload;
 import com.nomosiki.network.squad.payload.s2c.SquadArmyStatePayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -113,11 +120,16 @@ public class TacticalHudScreen extends Screen {
 	private void renderHint(GuiGraphics graphics) {
 		int selected = RtsClientState.multiSelectedSquads().size();
 		Component title = Component.translatable("overlay.nomosiki.rts.tactical_active");
-		Component hint = RtsClientState.bombardDesignate()
-			? Component.translatable("overlay.nomosiki.rts.bombard_hint", RtsClientState.bombardRadius())
-			: selected == 0
-				? Component.translatable("overlay.nomosiki.rts.tactical_no_selection")
-				: Component.translatable("overlay.nomosiki.rts.hint_tactical_mouse");
+		Component hint;
+		if (MatchClientState.buildPlaceMode()) {
+			hint = Component.translatable("screen.nomosiki.match.build.place_hint");
+		} else if (RtsClientState.bombardDesignate()) {
+			hint = Component.translatable("overlay.nomosiki.rts.bombard_hint", RtsClientState.bombardRadius());
+		} else if (selected == 0) {
+			hint = Component.translatable("overlay.nomosiki.rts.tactical_no_selection");
+		} else {
+			hint = Component.translatable("overlay.nomosiki.rts.hint_tactical_mouse");
+		}
 		SakuraStyle.drawCentered(graphics, this.font, title, this.width / 2, 8, SakuraStyle.TITLE);
 		SakuraStyle.drawCentered(graphics, this.font, hint, this.width / 2, 20, SakuraStyle.INK_MUTED);
 	}
@@ -597,6 +609,10 @@ public class TacticalHudScreen extends Screen {
 		if (RtsClientState.bombardDesignate()) {
 			return;
 		}
+		if (MatchClientState.buildPlaceMode() && this.minecraft != null) {
+			this.tryPlaceBuilding(mouseX, mouseY);
+			return;
+		}
 		if (wasDrag && this.boxSelect) {
 			this.selectSquadsInBox(mouseX, mouseY);
 			return;
@@ -626,7 +642,32 @@ public class TacticalHudScreen extends Screen {
 			SquadCommandClient.setActiveSquad(squad.get());
 			return;
 		}
+		BuildingHeartEntity building = this.minecraft == null
+			? null
+			: TacticalCursorPicking.ownedBuildingAt(this.minecraft, mouseX, mouseY);
+		if (building != null
+			&& MatchClient.last().phase() == MatchPhase.RUNNING.id()
+			&& this.minecraft != null) {
+			this.minecraft.setScreen(new MatchHqScreen());
+			return;
+		}
 		RtsClientState.clearSelection();
+	}
+
+	private void tryPlaceBuilding(double mouseX, double mouseY) {
+		Minecraft mc = this.minecraft;
+		String buildingId = MatchClientState.pendingBuildingId();
+		if (mc == null || buildingId == null) {
+			MatchClientState.clearBuildPlace();
+			return;
+		}
+		Vec3 hit = TacticalCursorPicking.hitLocation(mc, mouseX, mouseY);
+		if (hit == null) {
+			return;
+		}
+		BlockPos pos = BlockPos.containing(hit);
+		ClientPlayNetworking.send(new MatchBuildPlacePayload(buildingId, pos));
+		MatchClientState.clearBuildPlace();
 	}
 
 	private void releaseBombardDrag() {

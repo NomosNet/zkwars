@@ -1,6 +1,9 @@
 package com.nomosiki.client;
 
 import com.nomosiki.faction.FactionNameColors;
+import com.nomosiki.client.match.CaptureProgressRenderer;
+import com.nomosiki.client.match.MatchClient;
+import com.nomosiki.client.match.MatchEntityRenderers;
 import com.nomosiki.client.rts.ClanArmyClientState;
 import com.nomosiki.client.rts.TacticalCameraController;
 import com.nomosiki.client.rts.TacticalHudScreen;
@@ -150,6 +153,8 @@ public class NomosikiModClient implements ClientModInitializer {
 		RtsClientState.initFromConfig(NomosikiConfig.INSTANCE.rtsShowBattleHud);
 		com.nomosiki.client.compat.emote.NomosikEmoteClientCompat.init();
 		DuelClient.register();
+		MatchClient.register();
+		MatchEntityRenderers.register();
 
 		MenuScreens.register(ModScreenHandlers.NOMOSIK, NomosikScreen::new);
 		MenuScreens.register(ModScreenHandlers.HIRE, HireScreen::new);
@@ -167,6 +172,8 @@ public class NomosikiModClient implements ClientModInitializer {
 		List<Item> spawnEggs = new ArrayList<>(ModItems.playableUnitSpawnEggs());
 		ColorProviderRegistry.ITEM.register((stack, tintIndex) -> -1, spawnEggs.toArray(Item[]::new));
 
+		net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(
+			CaptureProgressRenderer::render);
 		net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(
 			com.nomosiki.client.rts.FormationGhostRenderer::render);
 		net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(

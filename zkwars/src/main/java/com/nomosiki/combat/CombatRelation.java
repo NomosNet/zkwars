@@ -6,6 +6,8 @@ import com.nomosiki.entity.NomosikiHorseMount;
 import com.nomosiki.faction.FactionDiplomacyService;
 import com.nomosiki.faction.FactionRelationStatus;
 import com.nomosiki.faction.FactionService;
+import com.nomosiki.match.MatchService;
+import com.nomosiki.match.entity.BuildingHeartEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,7 +31,33 @@ public final class CombatRelation {
 		if (entity instanceof NomosikEntity nomosik) {
 			return nomosik.getOwnerUUID();
 		}
+		if (entity instanceof BuildingHeartEntity heart) {
+			return heart.getOwnerUUID();
+		}
 		return null;
+	}
+
+	public static boolean isMatchEnemyTarget(UUID attackerOwnerId, LivingEntity candidate) {
+		if (attackerOwnerId == null || candidate == null) {
+			return false;
+		}
+		if (!(candidate.level() instanceof ServerLevel serverLevel)) {
+			return false;
+		}
+		MinecraftServer server = serverLevel.getServer();
+		if (server == null) {
+			return false;
+		}
+		MatchService match = MatchService.get(server);
+		if (candidate instanceof BuildingHeartEntity heart) {
+			byte heartSide = heart.matchSide();
+			byte attackerSide = match.session().sideOfOwner(attackerOwnerId);
+			return match.isRunning()
+				&& attackerSide != com.nomosiki.match.entity.CaptureBeaconEntity.SIDE_NONE
+				&& heartSide != attackerSide;
+		}
+		UUID candidateOwner = resolveOwnerId(candidate);
+		return match.areMatchEnemies(attackerOwnerId, candidateOwner);
 	}
 
 	public static FactionRelationStatus getRelation(MinecraftServer server, String factionA, String factionB) {
@@ -159,6 +187,9 @@ public final class CombatRelation {
 		UUID ownerId = attacker.getOwnerUUID();
 		if (ownerId == null) {
 			return false;
+		}
+		if (isMatchEnemyTarget(ownerId, target)) {
+			return true;
 		}
 		if (isFactionEnemyTarget(ownerId, target)) {
 			return true;

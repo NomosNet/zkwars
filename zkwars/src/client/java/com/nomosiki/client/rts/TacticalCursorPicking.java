@@ -2,6 +2,7 @@ package com.nomosiki.client.rts;
 
 import com.nomosiki.config.NomosikiConfig;
 import com.nomosiki.entity.NomosikEntity;
+import com.nomosiki.match.entity.BuildingHeartEntity;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -103,6 +104,26 @@ public final class TacticalCursorPicking {
 			return Optional.empty();
 		}
 		return nomosik.getSquadIdForGui();
+	}
+
+	@Nullable
+	public static BuildingHeartEntity ownedBuildingAt(Minecraft mc, double mouseX, double mouseY) {
+		if (mc.player == null) {
+			return null;
+		}
+		HitResult hit = pick(mc, mouseX, mouseY);
+		if (!(hit instanceof EntityHitResult entityHit)) {
+			return null;
+		}
+		Entity entity = entityHit.getEntity();
+		if (!(entity instanceof BuildingHeartEntity heart) || !heart.isAlive()) {
+			return null;
+		}
+		UUID owner = heart.getOwnerUUID();
+		if (owner == null || !owner.equals(mc.player.getUUID())) {
+			return null;
+		}
+		return heart;
 	}
 
 	@Nullable

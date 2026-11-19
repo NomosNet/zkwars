@@ -2,7 +2,7 @@
 
 Мод для **Minecraft 1.21.1** (Fabric): армия номосиков — пехота, лучники, кавалерия и номады; отряды, тактическое RTS-командование, фракции и дипломатия.
 
-**Версия:** 1.0.43 · **Автор:** WorldofCraft9
+**Версия:** 1.0.44 · **Автор:** WorldofCraft9
 
 ---
 
@@ -25,7 +25,7 @@
 
 1. Установите Fabric Loader для Minecraft 1.21.1.
 2. Положите в папку `mods/`:
-   - `zkwars-1.0.43.jar`
+   - `zkwars-1.0.44.jar`
    - Fabric API
 3. Запустите игру или сервер — конфиги создадутся автоматически.
 
@@ -36,7 +36,7 @@ cd zkwars
 .\gradlew.bat build
 ```
 
-Готовый jar: `build/libs/zkwars-1.0.43.jar`
+Готовый jar: `build/libs/zkwars-1.0.44.jar`
 
 Клиент для разработки:
 
@@ -237,6 +237,7 @@ cd zkwars
 | Файл | Содержание |
 |------|------------|
 | [`docs/admin-commands.md`](docs/admin-commands.md) | Команды админа: фракции, дипломатия и передача отрядов |
+| [`docs/match-local-testing.md`](docs/match-local-testing.md) | Соло-матч DoW: `/match solo`, захват точек, debug |
 | [`docs/rts-testing-guide.md`](docs/rts-testing-guide.md) | Чеклист RTS и дипломатии |
 | [`docs/rts-command-plan.md`](docs/rts-command-plan.md) | План и статус RTS-функций |
 | [`docs/faction-war-implementation-plan.md`](docs/faction-war-implementation-plan.md) | Войны фракций |
