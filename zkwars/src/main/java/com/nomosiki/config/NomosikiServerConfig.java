@@ -54,6 +54,9 @@ public final class NomosikiServerConfig {
 	/** Ninja movement and tactical mark ability. */
 	public final NinjaSettings ninja = new NinjaSettings();
 
+	/** Dawn-of-War style match mode. */
+	public final MatchSettings match = new MatchSettings();
+
 	private NomosikiServerConfig() {
 		weapons.put("katana", new Weapon(6.0, -2.4, 500));
 	}
@@ -164,6 +167,9 @@ public final class NomosikiServerConfig {
 		if (root.has("ninja") && root.get("ninja").isJsonObject()) {
 			loadNinja(root.getAsJsonObject("ninja"));
 		}
+		if (root.has("match") && root.get("match").isJsonObject()) {
+			loadMatch(root.getAsJsonObject("match"));
+		}
 	}
 
 	private void migrateLegacyIfNeeded() {
@@ -209,6 +215,17 @@ public final class NomosikiServerConfig {
 		this.ninja.markRange = Math.max(8.0, Math.min(128.0, getDouble(o, "markRange", this.ninja.markRange)));
 		this.ninja.markDurationTicks = Math.max(20, Math.min(6000, getInt(o, "markDurationTicks", this.ninja.markDurationTicks)));
 		this.ninja.markCooldownTicks = Math.max(0, Math.min(6000, getInt(o, "markCooldownTicks", this.ninja.markCooldownTicks)));
+	}
+
+	private void loadMatch(JsonObject o) {
+		this.match.durationSeconds = Math.max(60, Math.min(7200, getInt(o, "durationSeconds", this.match.durationSeconds)));
+		this.match.testDurationSeconds = Math.max(30, Math.min(3600, getInt(o, "testDurationSeconds", this.match.testDurationSeconds)));
+		this.match.holdSeconds = Math.max(5, Math.min(120, getInt(o, "holdSeconds", this.match.holdSeconds)));
+		this.match.captureRadius = Math.max(4.0, Math.min(32.0, getDouble(o, "captureRadius", this.match.captureRadius)));
+		this.match.bladeSpeedMultiplier = (float) Math.max(1.0, Math.min(5.0, getDouble(o, "bladeSpeedMultiplier", this.match.bladeSpeedMultiplier)));
+		this.match.soloBotEnabled = getBoolean(o, "soloBotEnabled", this.match.soloBotEnabled);
+		this.match.debugCommands = getBoolean(o, "debugCommands", this.match.debugCommands);
+		this.match.siegeDamageMultiplier = (float) Math.max(1.0, Math.min(10.0, getDouble(o, "siegeDamageMultiplier", this.match.siegeDamageMultiplier)));
 	}
 
 	private static double clampHorseSpeed(double speed) {
@@ -303,6 +320,7 @@ public final class NomosikiServerConfig {
 				root.add("duelDiscord", this.duelDiscord.toJson());
 				root.add("combat", this.combat.toJson());
 				root.add("ninja", this.ninja.toJson());
+				root.add("match", this.match.toJson());
 
 				gson.toJson(root, w);
 			}
@@ -502,6 +520,32 @@ public final class NomosikiServerConfig {
 			JsonObject obj = new JsonObject();
 			obj.addProperty("enabled", this.enabled);
 			obj.addProperty("webhookUrl", this.webhookUrl);
+			return obj;
+		}
+	}
+
+	public static final class MatchSettings {
+		/** Production match length (45 minutes). */
+		public int durationSeconds = 2700;
+		/** Used when {@link #debugCommands} is true (local playtest). */
+		public int testDurationSeconds = 900;
+		public int holdSeconds = 15;
+		public double captureRadius = 10.0;
+		public float bladeSpeedMultiplier = 1.75f;
+		public boolean soloBotEnabled = true;
+		public boolean debugCommands = true;
+		public float siegeDamageMultiplier = 2.5f;
+
+		JsonObject toJson() {
+			JsonObject obj = new JsonObject();
+			obj.addProperty("durationSeconds", this.durationSeconds);
+			obj.addProperty("testDurationSeconds", this.testDurationSeconds);
+			obj.addProperty("holdSeconds", this.holdSeconds);
+			obj.addProperty("captureRadius", this.captureRadius);
+			obj.addProperty("bladeSpeedMultiplier", this.bladeSpeedMultiplier);
+			obj.addProperty("soloBotEnabled", this.soloBotEnabled);
+			obj.addProperty("debugCommands", this.debugCommands);
+			obj.addProperty("siegeDamageMultiplier", this.siegeDamageMultiplier);
 			return obj;
 		}
 	}

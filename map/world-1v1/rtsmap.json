@@ -1,12 +1,18 @@
-
 {
     "name": "Berlingrad (Violetgrad) RI",
     "author": ["fgtrue"],
     "description": "A beautiful garden stuck in the past, now being overrun by ravageous pillagers.",
-    "version": "2.1",
+    "version": "2.2",
     "startPositions": [
         { "id": 1, "x": -82, "y": -13, "z": -137 },
         { "id": 2, "x": 116, "y": -13, "z": 133 }
+    ],
+    "capturePoints": [
+        { "id": "mid", "x": 17, "y": -13, "z": -2 },
+        { "id": "north", "x": 17, "y": -13, "z": -57 },
+        { "id": "south", "x": 17, "y": -13, "z": 53 },
+        { "id": "west", "x": -38, "y": -13, "z": -2 },
+        { "id": "east", "x": 72, "y": -13, "z": -2 }
     ],
     "modes": {
         "1v1": [[1], [2]]

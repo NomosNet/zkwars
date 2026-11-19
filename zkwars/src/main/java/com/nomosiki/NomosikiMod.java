@@ -3,6 +3,8 @@ package com.nomosiki;
 import com.nomosiki.advancement.NomosikiAdvancements;
 import com.nomosiki.duel.DuelCommands;
 import com.nomosiki.duel.DuelService;
+import com.nomosiki.match.MatchCommands;
+import com.nomosiki.match.MatchService;
 import com.nomosiki.compat.emote.server.NomosikSquadEmoteService;
 import com.nomosiki.config.NomosikiServerConfig;
 import com.nomosiki.entity.NomosikEntity;
@@ -23,6 +25,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import com.nomosiki.registry.ModBlocks;
@@ -83,11 +86,18 @@ public class NomosikiMod implements ModInitializer {
 			}
 			NomosikEntity.alertNomosikiOfOwnerDamage(serverLevel, player, attacker);
 		});
+		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
+			if (world.getServer() == null) {
+				return true;
+			}
+			return !MatchService.get(world.getServer()).isProtectedShell(pos);
+		});
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			FactionCommands.register(dispatcher);
 			FactionAdminCommands.register(dispatcher);
 			SquadCommands.register(dispatcher);
 			DuelCommands.register(dispatcher);
+			MatchCommands.register(dispatcher);
 		});
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			for (ServerLevel serverLevel : server.getAllLevels()) {
@@ -100,12 +110,14 @@ public class NomosikiMod implements ModInitializer {
 			NomosikSquadEmoteService.serverTick(server);
 			WartimeService.get(server).tick();
 			DuelService.get(server).tick();
+			MatchService.get(server).tick();
 		});
 		EntityTrackingEvents.START_TRACKING.register((trackedEntity, player) ->
 			NomosikSquadEmoteService.resendIfPlaying(trackedEntity, player));
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			NomosikSquadEmoteService.clearAll();
 			DuelService.forget(server);
+			MatchService.forget(server);
 		});
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
 			if (entity instanceof ServerPlayer player) {
@@ -131,6 +143,7 @@ public class NomosikiMod implements ModInitializer {
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			DuelService.get(server).onDisconnect(handler.player);
+			MatchService.get(server).onDisconnect(handler.player);
 			RtsCommandModeService.onDisconnect(handler.player);
 			NinjaMarkService.onDisconnect(handler.player.getUUID());
 			SquadClanNetworking.clearWatch(handler.player.getUUID());

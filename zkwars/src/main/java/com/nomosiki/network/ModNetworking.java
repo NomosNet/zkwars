@@ -2,6 +2,7 @@ package com.nomosiki.network;
 
 import com.nomosiki.network.duel.DuelNetworking;
 import com.nomosiki.network.faction.FactionNetworking;
+import com.nomosiki.network.match.MatchNetworking;
 import com.nomosiki.network.rts.RtsNetworking;
 import com.nomosiki.network.shop.TesterSquadShopNetworking;
 import com.nomosiki.network.squad.SquadCommandNetworking;
@@ -24,5 +25,6 @@ public final class ModNetworking {
 		NomosikEmoteNetworking.register();
 		TesterSquadShopNetworking.register();
 		DuelNetworking.register();
+		MatchNetworking.register();
 	}
 }

@@ -7,6 +7,8 @@ import com.nomosiki.entity.KnightEntity;
 import com.nomosiki.entity.AshigaruArtilleristEntity;
 import com.nomosiki.entity.NomadEntity;
 import com.nomosiki.entity.NomosikEntity;
+import com.nomosiki.match.entity.BuildingHeartEntity;
+import com.nomosiki.match.entity.CaptureBeaconEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -66,6 +68,22 @@ public final class ModEntities {
 			.vehicleAttachment(Player.DEFAULT_VEHICLE_ATTACHMENT)
 			.clientTrackingRange(10)
 			.build(NomosikiMod.id("captain").toString()));
+	public static final EntityType<BuildingHeartEntity> BUILDING_HEART = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		NomosikiMod.id("building_heart"),
+		EntityType.Builder.of(BuildingHeartEntity::new, MobCategory.MISC)
+			.sized(1.0F, 1.5F)
+			.clientTrackingRange(10)
+			.fireImmune()
+			.build(NomosikiMod.id("building_heart").toString()));
+	public static final EntityType<CaptureBeaconEntity> CAPTURE_BEACON = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		NomosikiMod.id("capture_beacon"),
+		EntityType.Builder.of(CaptureBeaconEntity::new, MobCategory.MISC)
+			.sized(0.9F, 1.8F)
+			.clientTrackingRange(10)
+			.fireImmune()
+			.build(NomosikiMod.id("capture_beacon").toString()));
 
 	private ModEntities() {
 	}
@@ -77,6 +95,8 @@ public final class ModEntities {
 		FabricDefaultAttributeRegistry.register(NOMAD, NomadEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(ARTILLERIST, AshigaruArtilleristEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(CAPTAIN, CaptainEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(BUILDING_HEART, BuildingHeartEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(CAPTURE_BEACON, CaptureBeaconEntity.createAttributes());
 		registerGroundPlacement(NOMOSIK);
 		registerGroundPlacement(ARCHER);
 		registerGroundPlacement(KNIGHT);
