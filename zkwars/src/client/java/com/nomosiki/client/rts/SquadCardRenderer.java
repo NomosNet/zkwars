@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class SquadCardRenderer {
-	public static final int CARD_W = 46;
-	public static final int CARD_H = 68;
+	public static final int CARD_W = 54;
+	public static final int CARD_H = 80;
 	public static final int CARD_GAP = 2;
 	public static final int CHEVRON_W = 10;
 	public static final int BADGE = 9;
@@ -37,7 +37,7 @@ public final class SquadCardRenderer {
 	private static final int BAR_H = 3;
 	private static final int BAR_PAD = 2;
 	private static final int PORTRAIT_SCALE_MIN = 14;
-	private static final int PORTRAIT_SCALE_MAX = 22;
+	private static final int PORTRAIT_SCALE_MAX = 30;
 	private static final int CARD_PAPER = 0xAAF4D6E0;
 	private static final int CARD_PAPER_DEAD = 0x88C8B4BA;
 	private static final int SELECTED_FILL = 0x66FF8FB5;
@@ -201,7 +201,7 @@ public final class SquadCardRenderer {
 			drawFallbackIcon(graphics, row, portraitX1, portraitY1, portraitX2 - portraitX1, portraitY2 - portraitY1, dead);
 		}
 
-		String count = Integer.toString(row.alive());
+		String count = row.alive() + "/" + row.total();
 		int countW = font.width(count);
 		graphics.drawString(font, count, x + (cardW - countW) / 2, portraitY2 - 10, dead ? SakuraStyle.INK_DISABLED : SakuraStyle.INK, false);
 

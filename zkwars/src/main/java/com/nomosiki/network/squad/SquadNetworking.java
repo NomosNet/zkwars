@@ -207,7 +207,9 @@ public final class SquadNetworking {
 			SquadWaypointService.snapshot(squad.id()),
 			hasFireZone,
 			fireAnchor,
-			fireRadius
+			fireRadius,
+			squad.matchRole(),
+			squad.wargearIdsView()
 		);
 	}
 

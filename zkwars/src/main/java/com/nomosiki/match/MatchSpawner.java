@@ -146,7 +146,7 @@ public final class MatchSpawner {
 		int spawned = 0;
 		spawned += spawnWorker(level, session, side, owner, race, yard, playerCommander);
 		if (playerCommander != null && side == 0) {
-			spawned += spawnPlayerSquad(playerCommander, session, race, SquadType.INFANTRY, 6, yard, "Match Line");
+			spawned += spawnPlayerSquad(playerCommander, session, race, SquadType.INFANTRY, 6, yard, "Match Line", MatchRecruitment.Role.INFANTRY.id());
 		} else {
 			spawned += spawnOwnedSquad(level, session, side, owner, race, SquadType.INFANTRY, 6, yard, false, false);
 		}
@@ -207,6 +207,13 @@ public final class MatchSpawner {
 		if (workersId == null) {
 			return;
 		}
+		UUID assigned = workersId;
+		mgr.data().getSquad(assigned).ifPresent(squad -> {
+			if (squad.matchRole().isEmpty()) {
+				squad.setMatchRole(MatchRecruitment.Role.WORKER.id());
+				mgr.data().setDirty();
+			}
+		});
 		String addErr = mgr.tryAddOrTransferMember(player, workersId, worker);
 		if (!addErr.isEmpty()) {
 			return;
@@ -222,7 +229,8 @@ public final class MatchSpawner {
 		SquadType type,
 		int count,
 		Vec3 at,
-		String name
+		String name,
+		@Nullable String matchRole
 	) {
 		SquadManager mgr = SquadService.get(player.server);
 		var createErr = mgr.createNamedSquad(player, name, (byte) 0, type);
@@ -232,6 +240,12 @@ public final class MatchSpawner {
 		UUID squadId = mgr.getActiveSquadId(player.getUUID()).orElse(null);
 		if (squadId == null) {
 			return 0;
+		}
+		if (matchRole != null && !matchRole.isBlank()) {
+			mgr.data().getSquad(squadId).ifPresent(squad -> {
+				squad.setMatchRole(matchRole);
+				mgr.data().setDirty();
+			});
 		}
 		ServerLevel level = player.serverLevel();
 		EntityType<? extends NomosikEntity> entityType = entityTypeFor(type);
@@ -330,7 +344,7 @@ public final class MatchSpawner {
 			spawned = spawnWorker(level, session, side, owner, race, at, player);
 		} else if (player != null && side == 0 && owner != null && owner.equals(player.getUUID())) {
 			SquadType type = role.squadType() == null ? SquadType.INFANTRY : role.squadType();
-			spawned = spawnPlayerSquad(player, session, race, type, size, at, "Match " + role.id());
+			spawned = spawnPlayerSquad(player, session, race, type, size, at, "Match " + role.id(), role.id());
 			tagRole(level, session, role);
 		} else {
 			SquadType type = role.squadType() == null ? SquadType.INFANTRY : role.squadType();
@@ -350,6 +364,77 @@ public final class MatchSpawner {
 		if (spawned > 0) {
 			session.setPop(side, session.getPop(side) + role.pop() * spawned);
 		}
+		return spawned;
+	}
+
+	public static int reinforceSquad(
+		ServerPlayer player,
+		MatchSession session,
+		NomosikSquad squad,
+		MatchRecruitment.Role role,
+		int count,
+		NomosikRace race
+	) {
+		if (count <= 0 || squad == null) {
+			return 0;
+		}
+		SquadManager mgr = SquadService.get(player.server);
+		ServerLevel level = player.serverLevel();
+		Vec3 sum = Vec3.ZERO;
+		int living = 0;
+		for (NomosikEntity member : mgr.resolveMembersInLevel(level, squad.id())) {
+			if (member.isAlive()) {
+				sum = sum.add(member.position());
+				living++;
+			}
+		}
+		Vec3 at = onSurface(level, living > 0 ? sum.scale(1.0 / living) : player.position());
+		SquadType type = role.squadType() == null ? SquadType.INFANTRY : role.squadType();
+		EntityType<? extends NomosikEntity> entityType = entityTypeFor(type);
+		int spawned = 0;
+		for (int i = 0; i < count; i++) {
+			double angle = (Math.PI * 2.0 * i) / count;
+			double x = at.x + Math.cos(angle) * SQUAD_RING_RADIUS;
+			double z = at.z + Math.sin(angle) * SQUAD_RING_RADIUS;
+			double y = surfaceY(level, x, z);
+			NomosikEntity entity = entityType.create(level);
+			if (entity == null) {
+				continue;
+			}
+			entity.moveTo(x, y, z, player.getYRot(), 0.0f);
+			entity.finalizeSpawn(level, level.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.COMMAND, null);
+			level.addFreshEntity(entity);
+			entity.setOwnerUUID(player.getUUID());
+			entity.setShouldFollowOwner(false);
+			entity.setNomosikRace(race);
+			if (role == MatchRecruitment.Role.WORKER) {
+				entity.setCombatMode(NomosikCombatMode.PASSIVE);
+				entity.setCustomName(net.minecraft.network.chat.Component.translatable("nomosiki.match.role.worker"));
+				entity.addTag("zkwars_match_worker");
+				session.workerIds.add(entity.getUUID());
+			} else {
+				entity.setCombatMode(NomosikCombatMode.NEUTRAL);
+				if (role == MatchRecruitment.Role.ANTI_ARMOR) {
+					entity.addTag("zkwars_match_anti_armor");
+				}
+				if (role == MatchRecruitment.Role.SUPPORT) {
+					entity.addTag("zkwars_match_support");
+				}
+				if (role == MatchRecruitment.Role.ELITE) {
+					entity.addTag("zkwars_match_elite");
+					entity.setHealth(Math.min(entity.getMaxHealth() * 2.5f, 140.0f));
+				}
+			}
+			String addErr = mgr.tryAddOrTransferMember(player, squad.id(), entity);
+			if (!addErr.isEmpty()) {
+				entity.discard();
+				break;
+			}
+			session.track(entity.getUUID());
+			spawned++;
+		}
+		SquadNetworking.sendSquadState(player, mgr);
+		SquadNetworking.sendArmyState(player, mgr, true);
 		return spawned;
 	}
 

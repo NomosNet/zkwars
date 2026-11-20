@@ -26,6 +26,7 @@
     "nomosiki.race.dwarf": "Гном",
     "itemGroup.zkwars.main": "Nomosiki Shogun",
     "block.zkwars.tester_squad_shop": "Магазин отрядов (тест)",
+    "block.zkwars.match_shell": "Оболочка постройки матча",
     "item.zkwars.tester_squad_shop": "Магазин отрядов (тест)",
     "screen.nomosiki.tester_shop.title": "Магазин отрядов (тест)",
     "screen.nomosiki.tester_shop.name_label": "Название отряда",
@@ -894,8 +895,19 @@
     "hud.nomosiki.match.timer": "Матч %s",
     "hud.nomosiki.match.authority": "Авторитет %s (+%s/с)",
     "hud.nomosiki.match.points": "Точки %s/%s",
+    "hud.nomosiki.match.points_split": "Точки %s | враг %s",
     "hud.nomosiki.match.pop": "Население %s/%s",
     "hud.nomosiki.match.hq": "Штаб %s/%s | Враг %s/%s",
     "hud.nomosiki.match.victory": "ПОБЕДА",
-    "hud.nomosiki.match.defeat": "ПОРАЖЕНИЕ"
+    "hud.nomosiki.match.defeat": "ПОРАЖЕНИЕ",
+
+    "tooltip.nomosiki.rts.wargear": "%s — %s авторитета",
+    "tooltip.nomosiki.rts.reinforce": "Пополнить %s за %s",
+    "message.nomosiki.match.wargear_bought": "Снаряжение куплено за %s авторитета.",
+    "message.nomosiki.match.wargear_owned": "Это снаряжение уже куплено.",
+    "message.nomosiki.match.wargear_slot": "В этом слоте уже есть снаряжение.",
+    "message.nomosiki.match.wargear_denied": "Этот отряд нельзя снарядить.",
+    "message.nomosiki.match.reinforced": "Пополнено бойцов: %s за %s авторитета.",
+    "message.nomosiki.match.reinforce_full": "Отряд полный.",
+    "message.nomosiki.match.reinforce_denied": "Этот отряд нельзя пополнить."
 }

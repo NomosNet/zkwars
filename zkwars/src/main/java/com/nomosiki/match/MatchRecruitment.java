@@ -73,4 +73,20 @@ public final class MatchRecruitment {
 	public static int squadSize(Role role) {
 		return role == Role.WORKER ? 1 : 6;
 	}
+
+	/** Authority to replace {@code missing} bodies. One full squad costs {@link Role#cost}. */
+	public static int reinforceCost(Role role, NomosikRace race, int missing) {
+		int size = squadSize(role);
+		if (role == null || missing <= 0 || size <= 0) {
+			return 0;
+		}
+		return Math.max(5, role.cost(race) * missing / size);
+	}
+
+	public static int reinforcePop(Role role, int missing) {
+		if (role == null || missing <= 0) {
+			return 0;
+		}
+		return role.pop() * missing;
+	}
 }
