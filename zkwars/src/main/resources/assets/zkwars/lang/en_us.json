@@ -870,6 +870,9 @@
     "message.nomosiki.match.build_outpost_exists": "That point already has an outpost.",
     "message.nomosiki.match.build_no_worker": "No free worker.",
     "message.nomosiki.match.build_started": "Building %s — worker en route.",
+    "message.nomosiki.match.schematic_missing": "Missing schematic file %s",
+    "message.nomosiki.match.schematic_bad": "Schematic %s could not be read",
+    "message.nomosiki.match.schematic_too_big": "Schematic %s is larger than 64 blocks on a side or 8000 blocks",
     "message.nomosiki.match.unknown_building": "Unknown building: %s",
 
     "screen.nomosiki.match.hq.title": "Headquarters",

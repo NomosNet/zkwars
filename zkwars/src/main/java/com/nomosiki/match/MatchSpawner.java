@@ -11,6 +11,7 @@ import com.nomosiki.squad.NomosikSquad;
 import com.nomosiki.squad.SquadManager;
 import com.nomosiki.squad.SquadService;
 import com.nomosiki.squad.SquadType;
+import com.nomosiki.match.schematic.SchematicLibrary;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.UUID;
 
 public final class MatchSpawner {
@@ -46,12 +48,20 @@ public final class MatchSpawner {
 		return onSurface(level, heartOrAt.add(YARD_OFFSET, 0.0, 0.0));
 	}
 
+	public static Vec3 yardForHeart(ServerLevel level, Entity heart) {
+		double offset = YARD_OFFSET;
+		if (heart instanceof BuildingHeartEntity building && building.spanX() > 0) {
+			offset = Math.max(YARD_OFFSET, building.spanX() / 2.0 + 2.0);
+		}
+		return onSurface(level, heart.position().add(offset, 0.0, 0.0));
+	}
+
 	public static Vec3 yardForSide(ServerLevel level, MatchSession session, byte side) {
 		UUID hqId = side == 0 ? session.hq0Id : session.hq1Id;
 		if (hqId != null) {
 			Entity entity = level.getEntity(hqId);
 			if (entity != null) {
-				return yardOutsideShell(level, entity.position());
+				return yardForHeart(level, entity);
 			}
 		}
 		Vec3 start = side == 0 ? session.start0 : session.start1;
@@ -63,18 +73,27 @@ public final class MatchSpawner {
 
 	public static BuildingHeartEntity spawnHq(ServerLevel level, MatchSession session, byte side, Vec3 at) {
 		Vec3 pos = onSurface(level, at);
+		BlockPos anchor = BlockPos.containing(pos);
+		NomosikRace race = session.raceOfSide(side);
+		SchematicLibrary.Result loaded = SchematicLibrary.get(level, race, "hq");
+		int sizeX = loaded.ok() && loaded.schematic() != null ? loaded.schematic().sizeX() : 5;
+		int sizeZ = loaded.ok() && loaded.schematic() != null ? loaded.schematic().sizeZ() : 5;
 		BuildingHeartEntity heart = ModEntities.BUILDING_HEART.create(level);
 		if (heart == null) {
 			return null;
 		}
-		heart.moveTo(pos.x + 0.5, pos.y, pos.z + 0.5, 0.0f, 0.0f);
+		heart.moveTo(anchor.getX() + sizeX / 2.0, anchor.getY(), anchor.getZ() + sizeZ / 2.0, 0.0f, 0.0f);
 		heart.setBuildingType(BuildingHeartType.HQ);
 		heart.setBuildKind("hq");
 		heart.setMatchSide(side);
 		heart.setOwnerUUID(session.ownerOfSide(side));
 		heart.setCustomNameVisible(true);
 		level.addFreshEntity(heart);
-		heart.buildDefaultShell(level);
+		if (loaded.ok() && loaded.schematic() != null) {
+			heart.startSchematic(loaded.schematic(), anchor, race.name().toLowerCase(Locale.ROOT), true);
+		} else {
+			heart.buildDefaultShell(level);
+		}
 		session.trackedBlocks.addAll(heart.shellBlocksView());
 		session.track(heart.getUUID());
 		if (side == 0) {
@@ -106,21 +125,28 @@ public final class MatchSpawner {
 		byte side,
 		BuildingHeartType type,
 		String buildKind,
-		Vec3 at
+		BlockPos anchor
 	) {
-		Vec3 pos = onSurface(level, at);
+		NomosikRace race = session.raceOfSide(side);
+		SchematicLibrary.Result loaded = SchematicLibrary.get(level, race, buildKind);
+		int sizeX = loaded.ok() && loaded.schematic() != null ? loaded.schematic().sizeX() : 5;
+		int sizeZ = loaded.ok() && loaded.schematic() != null ? loaded.schematic().sizeZ() : 5;
 		BuildingHeartEntity heart = ModEntities.BUILDING_HEART.create(level);
 		if (heart == null) {
 			return null;
 		}
-		heart.moveTo(pos.x + 0.5, pos.y, pos.z + 0.5, 0.0f, 0.0f);
+		heart.moveTo(anchor.getX() + sizeX / 2.0, anchor.getY(), anchor.getZ() + sizeZ / 2.0, 0.0f, 0.0f);
 		heart.setBuildingType(type);
 		heart.setMatchSide(side);
 		heart.setOwnerUUID(session.ownerOfSide(side));
 		heart.setBuildKind(buildKind);
 		heart.setCustomNameVisible(true);
 		level.addFreshEntity(heart);
-		heart.buildDefaultShell(level);
+		if (loaded.ok() && loaded.schematic() != null) {
+			heart.startSchematic(loaded.schematic(), anchor, race.name().toLowerCase(Locale.ROOT), false);
+		} else {
+			heart.buildDefaultShell(level);
+		}
 		session.trackedBlocks.addAll(heart.shellBlocksView());
 		session.track(heart.getUUID());
 		return heart;
@@ -140,7 +166,7 @@ public final class MatchSpawner {
 		if (hqId != null) {
 			Entity hq = level.getEntity(hqId);
 			if (hq != null) {
-				yard = yardOutsideShell(level, hq.position());
+				yard = yardForHeart(level, hq);
 			}
 		}
 		int spawned = 0;

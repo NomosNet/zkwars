@@ -1,7 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "zkwars-items:item/iron_samurai_leggings",
-    "layer1": "zkwars-items:item/iron_samurai_leggings_overlay"
-  }
-}

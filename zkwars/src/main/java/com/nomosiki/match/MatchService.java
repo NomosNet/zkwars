@@ -85,6 +85,12 @@ public final class MatchService {
 		if (this.session.phase == MatchPhase.RUNNING || this.session.phase == MatchPhase.COUNTDOWN) {
 			return Component.translatable("message.nomosiki.match.already_running");
 		}
+		NomosikRace chosen = NomosikRace.normalizeForPlay(race);
+		NomosikRace opponent = chosen == NomosikRace.ORC ? NomosikRace.HUMAN : NomosikRace.ORC;
+		Component missingHq = com.nomosiki.match.schematic.SchematicLibrary.missingHq(player.serverLevel(), chosen, opponent);
+		if (missingHq != null) {
+			return missingHq;
+		}
 		this.cleanupWorld(player.serverLevel(), false);
 		this.session.reset();
 		this.warnedFive = false;
@@ -94,8 +100,8 @@ public final class MatchService {
 		this.session.phase = MatchPhase.RUNNING;
 		this.session.side0PlayerId = player.getUUID();
 		this.session.side1IsBot = true;
-		this.session.race0 = NomosikRace.normalizeForPlay(race);
-		this.session.race1 = this.session.race0 == NomosikRace.ORC ? NomosikRace.HUMAN : NomosikRace.ORC;
+		this.session.race0 = chosen;
+		this.session.race1 = opponent;
 		this.session.authority0 = 60;
 		this.session.authority1 = 60;
 		this.session.startedAtMs = System.currentTimeMillis();
@@ -150,6 +156,9 @@ public final class MatchService {
 	}
 
 	public void tick() {
+		if (this.session.phase == MatchPhase.RUNNING) {
+			MatchBuildService.tick(this, this.server.overworld());
+		}
 		if (this.server.getTickCount() % 20 != 0) {
 			return;
 		}
@@ -165,7 +174,6 @@ public final class MatchService {
 		this.recomputeIncome();
 		this.tickSupportAuras(level);
 		MatchRaceAbilities.tick(level, this.session);
-		MatchBuildService.tick(this, level);
 		if (this.server.getTickCount() % 100 == 0) {
 			MatchBotController.tick(level, this.session);
 		}
@@ -302,7 +310,7 @@ public final class MatchService {
 			UUID outpostId = this.session.outpostByBeacon.get(entry.getKey());
 			if (outpostId != null) {
 				Entity outpost = level.getEntity(outpostId);
-				hasOutpost = outpost instanceof BuildingHeartEntity heart && heart.isAlive();
+				hasOutpost = outpost instanceof BuildingHeartEntity heart && heart.isAlive() && heart.isComplete();
 			}
 			int pointIncome = hasOutpost ? 4 : 2;
 			if (beacon.ownerSide() == 0) {

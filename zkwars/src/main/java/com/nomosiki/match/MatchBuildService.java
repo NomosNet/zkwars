@@ -4,19 +4,20 @@ import com.nomosiki.entity.NomosikEntity;
 import com.nomosiki.entity.NomosikRace;
 import com.nomosiki.match.entity.BuildingHeartEntity;
 import com.nomosiki.match.entity.CaptureBeaconEntity;
+import com.nomosiki.match.schematic.LitematicaSchematic;
+import com.nomosiki.match.schematic.SchematicLibrary;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.Iterator;
 import java.util.UUID;
 
 public final class MatchBuildService {
+	public static final int BLOCKS_PER_TICK = 12;
 	private static final double ARRIVE_DIST_SQR = 2.5 * 2.5;
-	private static final double MIN_HEART_SEPARATION = 6.0;
 
 	private MatchBuildService() {
 	}
@@ -36,18 +37,21 @@ public final class MatchBuildService {
 		if (!kind.allowedFor(race)) {
 			return Component.translatable("message.nomosiki.match.build_denied");
 		}
+		ServerLevel level = player.serverLevel();
+		SchematicLibrary.Result schematic = SchematicLibrary.get(level, race, kind.id());
+		if (!schematic.ok() || schematic.schematic() == null) {
+			return schematic.message();
+		}
 		int cost = kind.cost(race);
 		if (session.getAuthority(side) < cost) {
 			return Component.translatable("message.nomosiki.match.need_authority", cost);
 		}
-		ServerLevel level = player.serverLevel();
-		Vec3 siteVec = MatchSpawner.onSurface(level, Vec3.atCenterOf(site));
-		BlockPos surface = BlockPos.containing(siteVec);
-		if (!isSiteValid(level, session, surface)) {
+		Vec3Site surface = surfaceAt(level, site);
+		if (!isSiteValid(level, session, surface.pos, schematic.schematic())) {
 			return Component.translatable("message.nomosiki.match.build_bad_site");
 		}
 		if (kind == MatchBuildingCatalog.Kind.OUTPOST) {
-			CaptureBeaconEntity beacon = findOwnBeaconNear(level, session, side, surface, 12.0);
+			CaptureBeaconEntity beacon = findOwnBeaconNear(level, session, side, surface.pos, 12.0);
 			if (beacon == null) {
 				return Component.translatable("message.nomosiki.match.build_outpost_need_point");
 			}
@@ -60,10 +64,10 @@ public final class MatchBuildService {
 			return Component.translatable("message.nomosiki.match.build_no_worker");
 		}
 		session.addAuthority(side, -cost);
-		MatchBuildOrder order = new MatchBuildOrder(side, kind, surface, cost);
+		MatchBuildOrder order = new MatchBuildOrder(side, kind, surface.pos, cost);
 		order.workerId = worker.getUUID();
 		session.buildOrders.add(order);
-		worker.getNavigation().moveTo(surface.getX() + 0.5, surface.getY(), surface.getZ() + 0.5, 1.15);
+		worker.getNavigation().moveTo(surface.pos.getX() + 0.5, surface.pos.getY(), surface.pos.getZ() + 0.5, 1.15);
 		match.syncHudPublic(false);
 		return Component.translatable("message.nomosiki.match.build_started", kind.id());
 	}
@@ -73,6 +77,7 @@ public final class MatchBuildService {
 		if (session.phase != MatchPhase.RUNNING) {
 			return;
 		}
+		boolean repath = level.getServer().getTickCount() % 20 == 0;
 		Iterator<MatchBuildOrder> it = session.buildOrders.iterator();
 		while (it.hasNext()) {
 			MatchBuildOrder order = it.next();
@@ -88,7 +93,9 @@ public final class MatchBuildService {
 			}
 			double dist = worker.distanceToSqr(order.site.getX() + 0.5, order.site.getY(), order.site.getZ() + 0.5);
 			if (dist > ARRIVE_DIST_SQR) {
-				worker.getNavigation().moveTo(order.site.getX() + 0.5, order.site.getY(), order.site.getZ() + 0.5, 1.15);
+				if (repath) {
+					worker.getNavigation().moveTo(order.site.getX() + 0.5, order.site.getY(), order.site.getZ() + 0.5, 1.15);
+				}
 				continue;
 			}
 			BuildingHeartEntity heart = MatchSpawner.spawnBuilding(
@@ -97,7 +104,7 @@ public final class MatchBuildService {
 				order.side,
 				order.kind.heartType(),
 				order.kind.id(),
-				Vec3.atBottomCenterOf(order.site)
+				order.site
 			);
 			if (heart != null && order.kind == MatchBuildingCatalog.Kind.OUTPOST) {
 				CaptureBeaconEntity beacon = findOwnBeaconNear(level, session, order.side, order.site, 12.0);
@@ -108,6 +115,18 @@ public final class MatchBuildService {
 			it.remove();
 			match.syncHudPublic(false);
 		}
+		boolean finished = false;
+		for (UUID id : session.trackedEntities) {
+			Entity entity = level.getEntity(id);
+			if (entity instanceof BuildingHeartEntity heart && heart.isConstructing()) {
+				if (heart.tickConstruction(level, BLOCKS_PER_TICK, session)) {
+					finished = true;
+				}
+			}
+		}
+		if (finished) {
+			match.syncHudPublic(false);
+		}
 	}
 
 	public static boolean sideHasBuilding(ServerLevel level, MatchSession session, byte side, MatchBuildingCatalog.Kind kind) {
@@ -115,6 +134,7 @@ public final class MatchBuildService {
 			Entity entity = level.getEntity(id);
 			if (entity instanceof BuildingHeartEntity heart
 				&& heart.isAlive()
+				&& heart.isComplete()
 				&& heart.matchSide() == side
 				&& kind.id().equals(heart.buildKind())) {
 				return true;
@@ -134,17 +154,40 @@ public final class MatchBuildService {
 		return sideHasBuilding(level, session, side, required);
 	}
 
-	private static boolean isSiteValid(ServerLevel level, MatchSession session, BlockPos site) {
+	private static boolean isSiteValid(ServerLevel level, MatchSession session, BlockPos site, LitematicaSchematic schematic) {
 		for (UUID id : session.trackedEntities) {
 			Entity entity = level.getEntity(id);
-			if (entity instanceof BuildingHeartEntity heart && heart.isAlive()) {
-				if (heart.distanceToSqr(site.getX() + 0.5, site.getY(), site.getZ() + 0.5)
-					< MIN_HEART_SEPARATION * MIN_HEART_SEPARATION) {
-					return false;
-				}
+			if (entity instanceof BuildingHeartEntity heart
+				&& heart.isAlive()
+				&& heart.overlaps(site, schematic.sizeX(), schematic.sizeY(), schematic.sizeZ())) {
+				return false;
+			}
+		}
+		for (MatchBuildOrder order : session.buildOrders) {
+			SchematicLibrary.Result other = SchematicLibrary.get(level, session.raceOfSide(order.side), order.kind.id());
+			if (other.ok() && other.schematic() != null && boxesOverlap(site, schematic, order.site, other.schematic())) {
+				return false;
 			}
 		}
 		return true;
+	}
+
+	private static boolean boxesOverlap(BlockPos a, LitematicaSchematic left, BlockPos b, LitematicaSchematic right) {
+		return axisOverlap(a.getX(), left.sizeX(), b.getX(), right.sizeX())
+			&& axisOverlap(a.getY(), left.sizeY(), b.getY(), right.sizeY())
+			&& axisOverlap(a.getZ(), left.sizeZ(), b.getZ(), right.sizeZ());
+	}
+
+	private static boolean axisOverlap(int originA, int sizeA, int originB, int sizeB) {
+		return originA <= originB + sizeB - 1 && originB <= originA + sizeA - 1;
+	}
+
+	private record Vec3Site(BlockPos pos) {
+	}
+
+	private static Vec3Site surfaceAt(ServerLevel level, BlockPos site) {
+		net.minecraft.world.phys.Vec3 snapped = MatchSpawner.onSurface(level, net.minecraft.world.phys.Vec3.atCenterOf(site));
+		return new Vec3Site(BlockPos.containing(snapped));
 	}
 
 	private static NomosikEntity findFreeWorker(ServerLevel level, MatchSession session, byte side) {

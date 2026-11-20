@@ -1,7 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "zkwars-items:item/steel_samurai_chestplate",
-    "layer1": "zkwars-items:item/steel_samurai_chestplate_overlay"
-  }
-}

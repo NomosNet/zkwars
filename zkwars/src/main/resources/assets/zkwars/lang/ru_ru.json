@@ -871,6 +871,9 @@
     "message.nomosiki.match.build_outpost_exists": "На этой точке уже есть аванпост.",
     "message.nomosiki.match.build_no_worker": "Нет свободного рабочего.",
     "message.nomosiki.match.build_started": "Стройка: %s — рабочий вышел.",
+    "message.nomosiki.match.schematic_missing": "Нет файла схемы %s",
+    "message.nomosiki.match.schematic_bad": "Схема %s не читается",
+    "message.nomosiki.match.schematic_too_big": "Схема %s больше 64 блоков по оси или 8000 блоков",
     "message.nomosiki.match.unknown_building": "Неизвестное здание: %s",
 
     "screen.nomosiki.match.hq.title": "Штаб",
