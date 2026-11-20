@@ -486,8 +486,8 @@ public class CommandSquadScreen extends Screen {
 	}
 
 	private void renderSquadCards(GuiGraphics graphics, int mouseX, int mouseY) {
-		List<SquadArmyStatePayload.SquadRow> rows = RtsClientState.armySquads();
-		SquadCardRenderer.StripLayout layout = this.cardLayout();
+		List<SquadArmyStatePayload.SquadRow> rows = this.shownRows();
+		SquadCardRenderer.StripLayout layout = this.cardLayout(rows);
 		this.cardScroll = layout.scroll();
 		if (rows.isEmpty()) {
 			SakuraStyle.drawCentered(graphics, this.font, Component.translatable("screen.nomosiki.squad_commands.no_squads"),
@@ -501,14 +501,30 @@ public class CommandSquadScreen extends Screen {
 		}
 	}
 
+	private List<SquadArmyStatePayload.SquadRow> shownRows() {
+		return SquadCardRenderer.aliveRows(RtsClientState.armySquads());
+	}
+
 	private SquadCardRenderer.StripLayout cardLayout() {
-		return SquadCardRenderer.layoutStrip(this.listLeft, this.listTop, this.listWidth, RtsClientState.armySquads().size(), this.cardScroll);
+		return this.cardLayout(this.shownRows());
+	}
+
+	private SquadCardRenderer.StripLayout cardLayout(List<SquadArmyStatePayload.SquadRow> rows) {
+		return SquadCardRenderer.layoutStrip(
+			this.listLeft,
+			this.listTop,
+			this.listWidth,
+			rows,
+			SquadClientState.activeSquadId(),
+			this.cardScroll
+		);
 	}
 
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		if (button == 0) {
-			SquadCardRenderer.StripLayout layout = this.cardLayout();
+			List<SquadArmyStatePayload.SquadRow> rows = this.shownRows();
+			SquadCardRenderer.StripLayout layout = this.cardLayout(rows);
 			if (SquadCardRenderer.hitLeftChevron(layout, mouseX, mouseY)) {
 				this.cardScroll = Math.max(0, layout.scroll() - 1);
 				return true;
@@ -518,7 +534,6 @@ public class CommandSquadScreen extends Screen {
 				return true;
 			}
 			int cardIndex = SquadCardRenderer.cardIndexAt(layout, mouseX, mouseY);
-			List<SquadArmyStatePayload.SquadRow> rows = RtsClientState.armySquads();
 			if (cardIndex >= 0 && cardIndex < rows.size()) {
 				UUID squadId = rows.get(cardIndex).squadId();
 				RtsClientState.toggleSelected(squadId);

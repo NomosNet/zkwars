@@ -23,18 +23,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class SquadCardRenderer {
 	public static final int CARD_W = 54;
 	public static final int CARD_H = 80;
+	public static final int HEAD_SIZE = 28;
 	public static final int CARD_GAP = 2;
+	public static final int HEAD_GAP = 2;
 	public static final int CHEVRON_W = 10;
 	public static final int BADGE = 9;
 	private static final double PORTRAIT_RANGE = 256.0;
 	private static final int NAME_H = 11;
 	private static final int ICON_SRC = 16;
 	private static final int BAR_H = 3;
+	private static final int HEAD_BAR_H = 2;
 	private static final int BAR_PAD = 2;
 	private static final int PORTRAIT_SCALE_MIN = 14;
 	private static final int PORTRAIT_SCALE_MAX = 30;
@@ -47,24 +51,89 @@ public final class SquadCardRenderer {
 	private SquadCardRenderer() {
 	}
 
-	public static StripLayout layoutStrip(int left, int top, int width, int squadCount, int scroll) {
-		int needed = squadCount * CARD_W + Math.max(0, squadCount - 1) * CARD_GAP;
-		boolean overflow = squadCount > 0 && needed > width;
-		int chevronSpace = overflow ? (CHEVRON_W + CARD_GAP) * 2 : 0;
-		int cardsBudget = width - chevronSpace;
-		int visibleCount = Math.max(0, squadCount);
-		if (overflow) {
-			visibleCount = Math.max(1, (cardsBudget + CARD_GAP) / (CARD_W + CARD_GAP));
-			visibleCount = Math.min(visibleCount, squadCount);
+	public static List<SquadArmyStatePayload.SquadRow> aliveRows(List<SquadArmyStatePayload.SquadRow> rows) {
+		List<SquadArmyStatePayload.SquadRow> out = new ArrayList<>();
+		for (SquadArmyStatePayload.SquadRow row : rows) {
+			if (row.alive() > 0) {
+				out.add(row);
+			}
 		}
-		int maxScroll = Math.max(0, squadCount - visibleCount);
+		return out;
+	}
+
+	public static int resolvePrimaryIndex(List<SquadArmyStatePayload.SquadRow> rows, Optional<UUID> preferredId) {
+		if (rows.isEmpty()) {
+			return -1;
+		}
+		if (preferredId.isPresent()) {
+			UUID id = preferredId.get();
+			for (int i = 0; i < rows.size(); i++) {
+				if (rows.get(i).squadId().equals(id)) {
+					return i;
+				}
+			}
+		}
+		for (int i = 0; i < rows.size(); i++) {
+			if (RtsClientState.isSelected(rows.get(i).squadId())) {
+				return i;
+			}
+		}
+		return 0;
+	}
+
+	public static StripLayout layoutStrip(
+		int left,
+		int top,
+		int width,
+		List<SquadArmyStatePayload.SquadRow> rows,
+		Optional<UUID> preferredPrimaryId,
+		int scroll
+	) {
+		int primaryIndex = resolvePrimaryIndex(rows, preferredPrimaryId);
+		int headCount = primaryIndex < 0 ? 0 : Math.max(0, rows.size() - 1);
+		int primaryBlock = primaryIndex < 0 ? 0 : CARD_W + (headCount > 0 ? CARD_GAP : 0);
+		int headsBudget = Math.max(0, width - primaryBlock);
+		boolean overflow = false;
+		int visibleHeads = headCount;
+		int chevronSpace = 0;
+		if (headCount > 0) {
+			int needed = headCount * HEAD_SIZE + Math.max(0, headCount - 1) * HEAD_GAP;
+			overflow = needed > headsBudget;
+			chevronSpace = overflow ? (CHEVRON_W + CARD_GAP) * 2 : 0;
+			int budget = Math.max(0, headsBudget - chevronSpace);
+			if (overflow) {
+				visibleHeads = Math.max(1, (budget + HEAD_GAP) / (HEAD_SIZE + HEAD_GAP));
+				visibleHeads = Math.min(visibleHeads, headCount);
+			}
+		}
+		int maxScroll = Math.max(0, headCount - visibleHeads);
 		int clamped = Mth.clamp(scroll, 0, maxScroll);
-		int cardsW = visibleCount <= 0 ? 0 : visibleCount * CARD_W + Math.max(0, visibleCount - 1) * CARD_GAP;
-		int cardsLeft = overflow ? left + CHEVRON_W + CARD_GAP : left + Math.max(0, (width - cardsW) / 2);
+		int primaryX = left;
+		int headsLeft;
 		int leftChevronX = left;
-		int rightChevronX = cardsLeft + cardsW + CARD_GAP;
+		int rightChevronX = left;
+		if (overflow) {
+			headsLeft = left + primaryBlock + CHEVRON_W + CARD_GAP;
+			leftChevronX = left + primaryBlock;
+			rightChevronX = headsLeft + visibleHeads * HEAD_SIZE + Math.max(0, visibleHeads - 1) * HEAD_GAP + CARD_GAP;
+		} else {
+			headsLeft = left + primaryBlock;
+		}
 		return new StripLayout(
-			left, top, width, CARD_H, CARD_W, cardsLeft, visibleCount, clamped, maxScroll, overflow, leftChevronX, rightChevronX
+			left,
+			top,
+			width,
+			CARD_H,
+			primaryIndex,
+			primaryX,
+			headsLeft,
+			visibleHeads,
+			clamped,
+			maxScroll,
+			overflow,
+			leftChevronX,
+			rightChevronX,
+			rows.size()
 		);
 	}
 
@@ -122,27 +191,48 @@ public final class SquadCardRenderer {
 		java.util.Optional<UUID> activeId,
 		boolean showTransferBadge
 	) {
-		if (layout.overflow) {
-			drawChevron(graphics, layout.leftChevronX, layout.top, true, mouseX, mouseY, layout.scroll > 0);
-			drawChevron(graphics, layout.rightChevronX, layout.top, false, mouseX, mouseY, layout.scroll < layout.maxScroll);
+		if (layout.overflow()) {
+			drawChevron(graphics, layout.leftChevronX(), layout.top(), true, mouseX, mouseY, layout.scroll() > 0);
+			drawChevron(graphics, layout.rightChevronX(), layout.top(), false, mouseX, mouseY, layout.scroll() < layout.maxScroll());
 		}
 		Map<UUID, NomosikEntity> portraits = collectPortraits(mc);
 		int hoveredIndex = -1;
-		for (int i = 0; i < layout.visibleCount; i++) {
-			int rowIndex = layout.scroll + i;
-			if (rowIndex < 0 || rowIndex >= rows.size()) {
-				break;
+		if (layout.primaryIndex() >= 0 && layout.primaryIndex() < rows.size()) {
+			SquadArmyStatePayload.SquadRow primary = rows.get(layout.primaryIndex());
+			boolean hovered = hitRect(layout.primaryX(), layout.top(), CARD_W, CARD_H, mouseX, mouseY);
+			if (hovered) {
+				hoveredIndex = layout.primaryIndex();
 			}
+			boolean active = activeId.filter(id -> id.equals(primary.squadId())).isPresent();
+			boolean selected = RtsClientState.isSelected(primary.squadId());
+			drawCard(
+				graphics,
+				font,
+				primary,
+				portraits.get(primary.squadId()),
+				layout.primaryX(),
+				layout.top(),
+				CARD_W,
+				active,
+				selected,
+				hovered,
+				mouseX,
+				mouseY,
+				showTransferBadge
+			);
+		}
+		List<Integer> headIndices = headRowIndices(layout, rows.size());
+		for (int slot = 0; slot < headIndices.size(); slot++) {
+			int rowIndex = headIndices.get(slot);
 			SquadArmyStatePayload.SquadRow row = rows.get(rowIndex);
-			int x = layout.cardsLeft + i * (layout.cardW + CARD_GAP);
-			boolean hovered = mouseX >= x && mouseX < x + layout.cardW
-				&& mouseY >= layout.top && mouseY < layout.top + CARD_H;
+			int x = layout.headsLeft() + slot * (HEAD_SIZE + HEAD_GAP);
+			int y = layout.top() + (CARD_H - HEAD_SIZE) / 2;
+			boolean hovered = hitRect(x, y, HEAD_SIZE, HEAD_SIZE, mouseX, mouseY);
 			if (hovered) {
 				hoveredIndex = rowIndex;
 			}
-			boolean active = activeId.filter(id -> id.equals(row.squadId())).isPresent();
 			boolean selected = RtsClientState.isSelected(row.squadId());
-			drawCard(graphics, font, row, portraits.get(row.squadId()), x, layout.top, layout.cardW, active, selected, hovered, mouseX, mouseY, showTransferBadge);
+			drawHead(graphics, row, portraits.get(row.squadId()), x, y, selected, hovered, mouseX, mouseY);
 		}
 		return hoveredIndex;
 	}
@@ -223,6 +313,58 @@ public final class SquadCardRenderer {
 		}
 	}
 
+	private static void drawHead(
+		GuiGraphics graphics,
+		SquadArmyStatePayload.SquadRow row,
+		@Nullable NomosikEntity member,
+		int x,
+		int y,
+		boolean selected,
+		boolean hovered,
+		int mouseX,
+		int mouseY
+	) {
+		boolean dead = row.alive() <= 0;
+		int bg = dead ? CARD_PAPER_DEAD : CARD_PAPER;
+		graphics.fill(x, y, x + HEAD_SIZE, y + HEAD_SIZE, bg);
+		if (selected) {
+			graphics.fill(x, y, x + HEAD_SIZE, y + HEAD_SIZE, SELECTED_FILL);
+		}
+		if (hovered) {
+			graphics.fill(x, y, x + HEAD_SIZE, y + HEAD_SIZE, 0x33FFFFFF);
+		}
+		int gold = frameGold(false, selected, dead);
+		int hi = frameHi(false, selected, dead);
+		SakuraStyle.drawWaFrame(graphics, x, y, HEAD_SIZE, HEAD_SIZE, dead ? 0xFF4A3840 : SakuraStyle.FRAME_INK, gold, hi);
+
+		int portraitPad = 2;
+		int portraitX1 = x + portraitPad;
+		int portraitY1 = y + portraitPad;
+		int portraitX2 = x + HEAD_SIZE - portraitPad;
+		int portraitY2 = y + HEAD_SIZE - portraitPad - HEAD_BAR_H - 1;
+		if (member != null && member.isAlive() && !dead) {
+			int scale = Mth.clamp((portraitY2 - portraitY1) / 2, 8, 16);
+			graphics.enableScissor(portraitX1, portraitY1, portraitX2, portraitY2);
+			try {
+				InventoryScreen.renderEntityInInventoryFollowsMouse(
+					graphics, portraitX1, portraitY1, portraitX2, portraitY2, scale, 0.0625F, (float) mouseX, (float) mouseY, member);
+			} finally {
+				graphics.disableScissor();
+			}
+		} else {
+			drawFallbackIcon(graphics, row, portraitX1, portraitY1, portraitX2 - portraitX1, portraitY2 - portraitY1, dead);
+		}
+
+		int barX = x + 2;
+		int barW = HEAD_SIZE - 4;
+		int barY = y + HEAD_SIZE - HEAD_BAR_H - 1;
+		graphics.fill(barX, barY, barX + barW, barY + HEAD_BAR_H, HP_BAR_BG);
+		int fill = Mth.clamp(Math.round(row.avgHealthPct() * barW), 0, barW);
+		if (fill > 0) {
+			graphics.fill(barX, barY, barX + fill, barY + HEAD_BAR_H, HP_BAR_COLOR);
+		}
+	}
+
 	private static Component squadName(SquadArmyStatePayload.SquadRow row) {
 		if (row.name().isEmpty()) {
 			return Component.translatable(SquadType.fromId(row.typeId()).translationKey());
@@ -266,55 +408,81 @@ public final class SquadCardRenderer {
 	}
 
 	public static boolean hitStrip(StripLayout layout, double mouseX, double mouseY) {
-		return mouseX >= layout.left && mouseX < layout.left + layout.width
-			&& mouseY >= layout.top && mouseY < layout.top + layout.height;
+		return mouseX >= layout.left() && mouseX < layout.left() + layout.width()
+			&& mouseY >= layout.top() && mouseY < layout.top() + layout.height();
 	}
 
 	public static boolean hitLeftChevron(StripLayout layout, double mouseX, double mouseY) {
-		return layout.overflow && hitRect(layout.leftChevronX, layout.top, CHEVRON_W, CARD_H, mouseX, mouseY);
+		return layout.overflow() && hitRect(layout.leftChevronX(), layout.top(), CHEVRON_W, CARD_H, mouseX, mouseY);
 	}
 
 	public static boolean hitRightChevron(StripLayout layout, double mouseX, double mouseY) {
-		return layout.overflow && hitRect(layout.rightChevronX, layout.top, CHEVRON_W, CARD_H, mouseX, mouseY);
+		return layout.overflow() && hitRect(layout.rightChevronX(), layout.top(), CHEVRON_W, CARD_H, mouseX, mouseY);
 	}
 
 	public static int transferBadgeAt(StripLayout layout, double mouseX, double mouseY) {
-		if (mouseY < layout.top || mouseY >= layout.top + CARD_H) {
+		if (layout.primaryIndex() < 0) {
 			return -1;
 		}
-		int rel = (int) mouseX - layout.cardsLeft;
-		if (rel < 0) {
+		if (mouseY < layout.top() || mouseY >= layout.top() + CARD_H) {
 			return -1;
 		}
-		int stride = layout.cardW + CARD_GAP;
-		int slot = rel / stride;
-		int inSlot = rel % stride;
-		if (slot < 0 || slot >= layout.visibleCount || inSlot >= layout.cardW) {
-			return -1;
+		int bx = layout.primaryX() + CARD_W - BADGE - 2;
+		int by = layout.top() + 2;
+		if (hitRect(bx, by, BADGE, BADGE, mouseX, mouseY)) {
+			return layout.primaryIndex();
 		}
-		int bx = layout.cardW - BADGE - 2;
-		int by = 2;
-		if (inSlot < bx || inSlot >= bx + BADGE || mouseY < layout.top + by || mouseY >= layout.top + by + BADGE) {
-			return -1;
-		}
-		return layout.scroll + slot;
+		return -1;
 	}
 
 	public static int cardIndexAt(StripLayout layout, double mouseX, double mouseY) {
-		if (mouseY < layout.top || mouseY >= layout.top + CARD_H) {
+		if (mouseY < layout.top() || mouseY >= layout.top() + layout.height()) {
 			return -1;
 		}
-		int rel = (int) mouseX - layout.cardsLeft;
+		if (layout.primaryIndex() >= 0 && hitRect(layout.primaryX(), layout.top(), CARD_W, CARD_H, mouseX, mouseY)) {
+			return layout.primaryIndex();
+		}
+		int headY = layout.top() + (CARD_H - HEAD_SIZE) / 2;
+		if (mouseY < headY || mouseY >= headY + HEAD_SIZE) {
+			return -1;
+		}
+		int rel = (int) mouseX - layout.headsLeft();
 		if (rel < 0) {
 			return -1;
 		}
-		int stride = layout.cardW + CARD_GAP;
+		int stride = HEAD_SIZE + HEAD_GAP;
 		int slot = rel / stride;
 		int inSlot = rel % stride;
-		if (slot < 0 || slot >= layout.visibleCount || inSlot >= layout.cardW) {
+		if (slot < 0 || slot >= layout.visibleHeads() || inSlot >= HEAD_SIZE) {
 			return -1;
 		}
-		return layout.scroll + slot;
+		List<Integer> heads = headRowIndices(layout, layout.rowCount());
+		if (slot >= heads.size()) {
+			return -1;
+		}
+		return heads.get(slot);
+	}
+
+	private static List<Integer> headRowIndices(StripLayout layout, int rowCount) {
+		List<Integer> indices = new ArrayList<>();
+		if (layout.primaryIndex() < 0 || rowCount <= 0) {
+			return indices;
+		}
+		int skipped = 0;
+		for (int i = 0; i < rowCount; i++) {
+			if (i == layout.primaryIndex()) {
+				continue;
+			}
+			if (skipped < layout.scroll()) {
+				skipped++;
+				continue;
+			}
+			indices.add(i);
+			if (indices.size() >= layout.visibleHeads()) {
+				break;
+			}
+		}
+		return indices;
 	}
 
 	private static void drawFallbackIcon(
@@ -327,6 +495,9 @@ public final class SquadCardRenderer {
 		boolean dead
 	) {
 		int iconSize = Math.min(28, Math.min(w, h) - 2);
+		if (iconSize <= 0) {
+			return;
+		}
 		int iconX = x + (w - iconSize) / 2;
 		int iconY = y + (h - iconSize) / 2 - 2;
 		graphics.pose().pushPose();
@@ -391,14 +562,28 @@ public final class SquadCardRenderer {
 		int top,
 		int width,
 		int height,
-		int cardW,
-		int cardsLeft,
-		int visibleCount,
+		int primaryIndex,
+		int primaryX,
+		int headsLeft,
+		int visibleHeads,
 		int scroll,
 		int maxScroll,
 		boolean overflow,
 		int leftChevronX,
-		int rightChevronX
+		int rightChevronX,
+		int rowCount
 	) {
+		/** Compatibility alias for previous uniform-card layout fields. */
+		public int cardW() {
+			return CARD_W;
+		}
+
+		public int cardsLeft() {
+			return primaryX;
+		}
+
+		public int visibleCount() {
+			return (primaryIndex >= 0 ? 1 : 0) + visibleHeads;
+		}
 	}
 }

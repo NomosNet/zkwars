@@ -230,7 +230,17 @@ public final class RtsClientState {
 		if (allowEmptySelection || !multiSelected.isEmpty()) {
 			return;
 		}
-		SquadClientState.activeSquadId().ifPresent(multiSelected::add);
+		Optional<UUID> active = SquadClientState.activeSquadId();
+		if (active.isPresent() && squadRow(active.get()).filter(r -> r.alive() > 0).isPresent()) {
+			multiSelected.add(active.get());
+			return;
+		}
+		for (SquadArmyStatePayload.SquadRow row : armySquads) {
+			if (row.alive() > 0) {
+				multiSelected.add(row.squadId());
+				return;
+			}
+		}
 	}
 
 	private static void syncSquadClientState(SquadArmyStatePayload payload) {
@@ -243,9 +253,22 @@ public final class RtsClientState {
 	private static void pruneSelection() {
 		Set<UUID> valid = new HashSet<>();
 		for (SquadArmyStatePayload.SquadRow row : armySquads) {
-			valid.add(row.squadId());
+			if (row.alive() > 0) {
+				valid.add(row.squadId());
+			}
 		}
 		multiSelected.retainAll(valid);
+		if (multiSelected.isEmpty()) {
+			allowEmptySelection = true;
+		}
+	}
+
+	/** Clears selection and army strip after a match ends. */
+	public static void clearForMatchEnd() {
+		armySquads = List.of();
+		armyTickId = 0;
+		clearSelection();
+		SquadClientState.apply(new SquadStatePayload(Optional.empty(), List.of()));
 	}
 
 	public static boolean isSelected(UUID squadId) {
@@ -287,7 +310,12 @@ public final class RtsClientState {
 	}
 
 	public static void selectRange(int fromIndex, int toIndex) {
-		List<SquadArmyStatePayload.SquadRow> rows = armySquads;
+		List<SquadArmyStatePayload.SquadRow> rows = new ArrayList<>();
+		for (SquadArmyStatePayload.SquadRow row : armySquads) {
+			if (row.alive() > 0) {
+				rows.add(row);
+			}
+		}
 		if (rows.isEmpty()) {
 			return;
 		}
@@ -304,7 +332,7 @@ public final class RtsClientState {
 		allowEmptySelection = false;
 		multiSelected.clear();
 		for (SquadArmyStatePayload.SquadRow row : armySquads) {
-			if (row.typeId() == typeId) {
+			if (row.typeId() == typeId && row.alive() > 0) {
 				multiSelected.add(row.squadId());
 			}
 		}

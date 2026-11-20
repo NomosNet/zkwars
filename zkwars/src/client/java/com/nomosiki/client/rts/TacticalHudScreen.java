@@ -188,15 +188,15 @@ public class TacticalHudScreen extends Screen {
 			return;
 		}
 		List<SquadArmyStatePayload.SquadRow> rows = this.shownRows();
-		SquadCardRenderer.StripLayout layout = this.cardLayout();
+		java.util.Optional<UUID> active = ClanArmyClientState.watching()
+			? java.util.Optional.empty()
+			: SquadClientState.activeSquadId();
+		SquadCardRenderer.StripLayout layout = this.cardLayout(rows, active);
 		this.storeScroll(layout.scroll());
 		if (rows.isEmpty()) {
 			return;
 		}
 		boolean badge = ClanArmyClientState.watching() ? ClanArmyClientState.admin() : ClanArmyClientState.canTransfer();
-		java.util.Optional<UUID> active = ClanArmyClientState.watching()
-			? java.util.Optional.empty()
-			: SquadClientState.activeSquadId();
 		int hovered = SquadCardRenderer.renderStrip(
 			graphics, this.font, Minecraft.getInstance(), layout, rows, mouseX, mouseY, active, badge);
 		if (hovered >= 0) {
@@ -263,11 +263,22 @@ public class TacticalHudScreen extends Screen {
 	}
 
 	private SquadCardRenderer.StripLayout cardLayout() {
+		java.util.Optional<UUID> active = ClanArmyClientState.watching()
+			? java.util.Optional.empty()
+			: SquadClientState.activeSquadId();
+		return this.cardLayout(this.shownRows(), active);
+	}
+
+	private SquadCardRenderer.StripLayout cardLayout(
+		List<SquadArmyStatePayload.SquadRow> rows,
+		java.util.Optional<UUID> preferredPrimaryId
+	) {
 		return SquadCardRenderer.layoutStrip(
 			TacticalChrome.cardLeft(),
 			TacticalChrome.cardTop(this.height),
 			TacticalChrome.cardWidth(this.width),
-			this.shownRows().size(),
+			rows,
+			preferredPrimaryId,
 			this.shownScroll());
 	}
 
@@ -427,7 +438,10 @@ public class TacticalHudScreen extends Screen {
 	}
 
 	private List<SquadArmyStatePayload.SquadRow> shownRows() {
-		return ClanArmyClientState.watching() ? ClanArmyClientState.watchedSquads() : RtsClientState.armySquads();
+		List<SquadArmyStatePayload.SquadRow> raw = ClanArmyClientState.watching()
+			? ClanArmyClientState.watchedSquads()
+			: RtsClientState.armySquads();
+		return SquadCardRenderer.aliveRows(raw);
 	}
 
 	private int shownScroll() {

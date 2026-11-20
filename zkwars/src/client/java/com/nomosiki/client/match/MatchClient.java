@@ -1,5 +1,6 @@
 package com.nomosiki.client.match;
 
+import com.nomosiki.client.rts.RtsClientState;
 import com.nomosiki.client.rts.TacticalHudScreen;
 import com.nomosiki.match.MatchPhase;
 import com.nomosiki.network.match.payload.s2c.MatchHudPayload;
@@ -19,9 +20,24 @@ public final class MatchClient {
 
 	public static void register() {
 		ClientPlayNetworking.registerGlobalReceiver(MatchHudPayload.TYPE, (payload, context) ->
-			context.client().execute(() -> last = payload));
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> last = idlePayload());
+			context.client().execute(() -> applyHud(payload)));
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+			last = idlePayload();
+			RtsClientState.clearForMatchEnd();
+		});
 		HudRenderCallback.EVENT.register(MatchClient::renderHud);
+	}
+
+	private static void applyHud(MatchHudPayload payload) {
+		boolean wasRunning = last.phase() == MatchPhase.RUNNING.id();
+		boolean wasEnded = last.phase() == MatchPhase.ENDED.id() || last.showEnd();
+		boolean nowRunning = payload.phase() == MatchPhase.RUNNING.id();
+		boolean nowEnded = payload.phase() == MatchPhase.ENDED.id() || payload.showEnd();
+		last = payload;
+		// Only wipe match army/selection when leaving an active or ending match — never peacetime squads.
+		if ((wasRunning && !nowRunning) || (nowEnded && !wasEnded)) {
+			RtsClientState.clearForMatchEnd();
+		}
 	}
 
 	public static MatchHudPayload last() {

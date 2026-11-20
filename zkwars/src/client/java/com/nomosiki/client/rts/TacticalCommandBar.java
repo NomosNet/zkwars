@@ -391,7 +391,7 @@ public final class TacticalCommandBar {
 	private static void drawSpacingButton(GuiGraphics graphics, Font font, Layout layout, int presetIndex, boolean hovered, boolean active) {
 		int cx = layout.buttonCenterX(SPACING);
 		int cy = layout.buttonCenterY(SPACING);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
+		drawSquareButton(graphics, cx, cy, hovered, active, false);
 		drawIcon(graphics, ICON_SPACING, cx, cy, active);
 		Component icon = Component.literal(String.valueOf(presetIndex + 1));
 		drawCenteredIcon(graphics, font, icon, cx, cy, active);
@@ -407,9 +407,9 @@ public final class TacticalCommandBar {
 	) {
 		int cx = layout.buttonCenterX(STANCE);
 		int cy = layout.buttonCenterY(STANCE);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
+		drawSquareButton(graphics, cx, cy, hovered, active, false);
 		if (active) {
-			fillInnerDisc(graphics, cx, cy, 9, stanceTint(stance));
+			fillInnerSquare(graphics, cx, cy, 3, stanceTint(stance));
 		}
 		drawIcon(graphics, stanceIcon(stance), cx, cy, active);
 	}
@@ -424,7 +424,7 @@ public final class TacticalCommandBar {
 	) {
 		int cx = layout.buttonCenterX(SHIELD);
 		int cy = layout.buttonCenterY(SHIELD);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, active && up);
+		drawSquareButton(graphics, cx, cy, hovered, active, active && up);
 		drawIcon(graphics, ICON_SHIELD, cx, cy, active);
 	}
 
@@ -438,7 +438,7 @@ public final class TacticalCommandBar {
 	) {
 		int cx = layout.buttonCenterX(FORMATION);
 		int cy = layout.buttonCenterY(FORMATION);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
+		drawSquareButton(graphics, cx, cy, hovered, active, false);
 		drawIcon(graphics, formationIcon(formation), cx, cy, active);
 	}
 
@@ -452,7 +452,7 @@ public final class TacticalCommandBar {
 	) {
 		int cx = layout.buttonCenterX(index);
 		int cy = layout.buttonCenterY(index);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
+		drawSquareButton(graphics, cx, cy, hovered, active, false);
 		drawIcon(graphics, ICON_MARK, cx, cy, active);
 	}
 
@@ -469,7 +469,7 @@ public final class TacticalCommandBar {
 	) {
 		int cx = layout.buttonCenterX(index);
 		int cy = layout.buttonCenterY(index);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, active && aiming);
+		drawSquareButton(graphics, cx, cy, hovered, active, active && aiming);
 		drawIcon(graphics, ICON_BOMBARD, cx, cy, active);
 	}
 
@@ -484,7 +484,7 @@ public final class TacticalCommandBar {
 	) {
 		int cx = layout.buttonCenterX(index);
 		int cy = layout.buttonCenterY(index);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, active && mounted);
+		drawSquareButton(graphics, cx, cy, hovered, active, active && mounted);
 		drawIcon(graphics, ICON_SIEGE_MOUNT, cx, cy, active);
 	}
 
@@ -514,16 +514,23 @@ public final class TacticalCommandBar {
 		SakuraStyle.drawCentered(graphics, font, text, cx, y, color);
 	}
 
-	private static void fillInnerDisc(GuiGraphics graphics, int cx, int cy, int radius, int color) {
-		int r2 = radius * radius;
-		for (int dy = -radius; dy <= radius; dy++) {
-			int remain = r2 - dy * dy;
-			if (remain < 0) {
-				continue;
-			}
-			int dx = (int) Math.floor(Math.sqrt(remain));
-			graphics.fill(cx - dx, cy + dy, cx + dx + 1, cy + dy + 1, color);
+	private static void drawSquareButton(GuiGraphics graphics, int cx, int cy, boolean hovered, boolean active, boolean selected) {
+		int x = cx - BUTTON_SIZE / 2;
+		int y = cy - BUTTON_SIZE / 2;
+		SakuraStyle.drawButton(graphics, x, y, BUTTON_SIZE, BUTTON_SIZE, hovered || selected, active);
+		if (selected && active) {
+			SakuraStyle.drawGoldSelection(graphics, x, y, BUTTON_SIZE, BUTTON_SIZE);
 		}
+	}
+
+	private static void fillInnerSquare(GuiGraphics graphics, int cx, int cy, int inset, int color) {
+		int x = cx - BUTTON_SIZE / 2 + inset;
+		int y = cy - BUTTON_SIZE / 2 + inset;
+		int size = BUTTON_SIZE - inset * 2;
+		if (size <= 0) {
+			return;
+		}
+		graphics.fill(x, y, x + size, y + size, color);
 	}
 
 	private static boolean hasSelectedSquads() {
@@ -723,7 +730,7 @@ public final class TacticalCommandBar {
 	) {
 		int cx = layout.buttonCenterX(index);
 		int cy = layout.buttonCenterY(index);
-		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, enabled, hovered && enabled);
+		drawSquareButton(graphics, cx, cy, hovered, enabled, hovered && enabled);
 		if (!enabled) {
 			graphics.setColor(0.45f, 0.45f, 0.45f, 1.0f);
 		}
