@@ -1,9 +1,11 @@
 package com.nomosiki.match.entity;
 
+import com.nomosiki.block.MatchShellBlock;
 import com.nomosiki.config.NomosikiServerConfig;
 import com.nomosiki.entity.AshigaruArtilleristEntity;
 import com.nomosiki.match.BuildingHeartType;
 import com.nomosiki.match.MatchService;
+import com.nomosiki.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -25,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /** Immobile building core. Shell blocks are restored while the heart lives. */
@@ -39,11 +42,12 @@ public class BuildingHeartEntity extends Mob {
 		SynchedEntityData.defineId(BuildingHeartEntity.class, EntityDataSerializers.BYTE);
 	private static final EntityDataAccessor<Byte> DATA_TYPE =
 		SynchedEntityData.defineId(BuildingHeartEntity.class, EntityDataSerializers.BYTE);
+	private static final EntityDataAccessor<String> DATA_KIND =
+		SynchedEntityData.defineId(BuildingHeartEntity.class, EntityDataSerializers.STRING);
+	private static final EntityDataAccessor<Optional<UUID>> DATA_OWNER =
+		SynchedEntityData.defineId(BuildingHeartEntity.class, EntityDataSerializers.OPTIONAL_UUID);
 
 	private final List<BlockPos> shellBlocks = new ArrayList<>();
-	@Nullable
-	private UUID ownerId;
-	private String buildKind = "hq";
 	private byte lastCrackStage = -1;
 
 	public BuildingHeartEntity(EntityType<? extends BuildingHeartEntity> type, Level level) {
@@ -66,6 +70,8 @@ public class BuildingHeartEntity extends Mob {
 		super.defineSynchedData(builder);
 		builder.define(DATA_SIDE, (byte) 0);
 		builder.define(DATA_TYPE, BuildingHeartType.HQ.id());
+		builder.define(DATA_KIND, "hq");
+		builder.define(DATA_OWNER, Optional.empty());
 	}
 
 	public byte matchSide() {
@@ -91,19 +97,20 @@ public class BuildingHeartEntity extends Mob {
 
 	@Nullable
 	public UUID getOwnerUUID() {
-		return this.ownerId;
+		return this.entityData.get(DATA_OWNER).orElse(null);
 	}
 
 	public void setOwnerUUID(@Nullable UUID ownerId) {
-		this.ownerId = ownerId;
+		this.entityData.set(DATA_OWNER, Optional.ofNullable(ownerId));
 	}
 
 	public String buildKind() {
-		return this.buildKind;
+		String kind = this.entityData.get(DATA_KIND);
+		return kind == null || kind.isBlank() ? "hq" : kind;
 	}
 
 	public void setBuildKind(String buildKind) {
-		this.buildKind = buildKind == null || buildKind.isBlank() ? "hq" : buildKind;
+		this.entityData.set(DATA_KIND, buildKind == null || buildKind.isBlank() ? "hq" : buildKind);
 	}
 
 	public List<BlockPos> shellBlocksView() {
@@ -129,12 +136,12 @@ public class BuildingHeartEntity extends Mob {
 			default -> 2;
 		};
 		int height = this.buildingType() == BuildingHeartType.TOWER ? 4 : 2;
-		BlockState wall = switch (this.buildingType()) {
-			case HQ -> Blocks.IRON_BLOCK.defaultBlockState();
-			case TOWER -> Blocks.COBBLESTONE.defaultBlockState();
-			case OUTPOST -> Blocks.OAK_PLANKS.defaultBlockState();
-			default -> Blocks.STONE_BRICKS.defaultBlockState();
-		};
+		BlockState wall = shell(switch (this.buildingType()) {
+			case HQ -> MatchShellBlock.Look.IRON;
+			case TOWER -> MatchShellBlock.Look.COBBLE;
+			case OUTPOST -> MatchShellBlock.Look.PLANKS;
+			default -> MatchShellBlock.Look.BRICKS;
+		});
 		List<BlockPos> placed = new ArrayList<>();
 		for (int dx = -radius; dx <= radius; dx++) {
 			for (int dz = -radius; dz <= radius; dz++) {
@@ -152,9 +159,9 @@ public class BuildingHeartEntity extends Mob {
 		}
 		BlockPos roof = origin.above(height + 1);
 		if (level.getBlockState(roof).isAir() || level.getBlockState(roof).canBeReplaced()) {
-			BlockState roofBlock = this.buildingType() == BuildingHeartType.HQ
-				? Blocks.GOLD_BLOCK.defaultBlockState()
-				: Blocks.STONE_SLAB.defaultBlockState();
+			BlockState roofBlock = shell(this.buildingType() == BuildingHeartType.HQ
+				? MatchShellBlock.Look.GOLD
+				: MatchShellBlock.Look.STONE);
 			level.setBlock(roof, roofBlock, 3);
 			placed.add(roof.immutable());
 		}
@@ -163,14 +170,27 @@ public class BuildingHeartEntity extends Mob {
 
 	public void clearShell(ServerLevel level) {
 		for (BlockPos pos : this.shellBlocks) {
-			BlockState state = level.getBlockState(pos);
-			if (state.is(Blocks.IRON_BLOCK) || state.is(Blocks.STONE_BRICKS) || state.is(Blocks.GOLD_BLOCK)
-				|| state.is(Blocks.CRACKED_STONE_BRICKS) || state.is(Blocks.COBBLESTONE)
-				|| state.is(Blocks.OAK_PLANKS) || state.is(Blocks.STONE_SLAB)) {
+			if (isShellBlock(level.getBlockState(pos))) {
 				level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 			}
 		}
 		this.shellBlocks.clear();
+	}
+
+	/** Current passable shell, plus the solid blocks older matches placed. */
+	public static boolean isShellBlock(BlockState state) {
+		return state.is(ModBlocks.MATCH_SHELL)
+			|| state.is(Blocks.IRON_BLOCK)
+			|| state.is(Blocks.STONE_BRICKS)
+			|| state.is(Blocks.GOLD_BLOCK)
+			|| state.is(Blocks.CRACKED_STONE_BRICKS)
+			|| state.is(Blocks.COBBLESTONE)
+			|| state.is(Blocks.OAK_PLANKS)
+			|| state.is(Blocks.STONE_SLAB);
+	}
+
+	private static BlockState shell(MatchShellBlock.Look look) {
+		return ModBlocks.MATCH_SHELL.defaultBlockState().setValue(MatchShellBlock.LOOK, look);
 	}
 
 	@Override
@@ -199,11 +219,15 @@ public class BuildingHeartEntity extends Mob {
 			return;
 		}
 		this.lastCrackStage = stage;
-		BlockState cracked = Blocks.CRACKED_STONE_BRICKS.defaultBlockState();
 		if (stage >= 2) {
+			BlockState cracked = shell(MatchShellBlock.Look.CRACKED);
 			for (BlockPos pos : this.shellBlocks) {
 				BlockState state = level.getBlockState(pos);
-				if (state.is(Blocks.STONE_BRICKS) || state.is(Blocks.IRON_BLOCK)) {
+				if (!state.is(ModBlocks.MATCH_SHELL)) {
+					continue;
+				}
+				MatchShellBlock.Look look = state.getValue(MatchShellBlock.LOOK);
+				if (look == MatchShellBlock.Look.BRICKS || look == MatchShellBlock.Look.IRON) {
 					level.setBlock(pos, cracked, 3);
 				}
 			}
@@ -236,7 +260,7 @@ public class BuildingHeartEntity extends Mob {
 
 	@Override
 	public boolean canBeCollidedWith() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -248,9 +272,9 @@ public class BuildingHeartEntity extends Mob {
 		super.addAdditionalSaveData(tag);
 		tag.putByte(NBT_SIDE, this.matchSide());
 		tag.putByte(NBT_TYPE, this.buildingType().id());
-		tag.putString(NBT_BUILD_KIND, this.buildKind);
-		if (this.ownerId != null) {
-			tag.putUUID(NBT_OWNER, this.ownerId);
+		tag.putString(NBT_BUILD_KIND, this.buildKind());
+		if (this.getOwnerUUID() != null) {
+			tag.putUUID(NBT_OWNER, this.getOwnerUUID());
 		}
 		ListTag list = new ListTag();
 		for (BlockPos pos : this.shellBlocks) {
@@ -272,7 +296,7 @@ public class BuildingHeartEntity extends Mob {
 			this.setBuildKind(tag.getString(NBT_BUILD_KIND));
 		}
 		if (tag.hasUUID(NBT_OWNER)) {
-			this.ownerId = tag.getUUID(NBT_OWNER);
+			this.setOwnerUUID(tag.getUUID(NBT_OWNER));
 		}
 		this.shellBlocks.clear();
 		ListTag list = tag.getList(NBT_SHELL, Tag.TAG_COMPOUND);

@@ -26,6 +26,7 @@
     "nomosiki.race.dwarf": "Dwarf",
     "itemGroup.zkwars.main": "Nomosiki Shogun",
     "block.zkwars.tester_squad_shop": "Tester Squad Shop",
+    "block.zkwars.match_shell": "Match Building Shell",
     "item.zkwars.tester_squad_shop": "Tester Squad Shop",
     "screen.nomosiki.tester_shop.title": "Tester squad shop",
     "screen.nomosiki.tester_shop.name_label": "Squad name",
@@ -893,8 +894,19 @@
     "hud.nomosiki.match.timer": "Match %s",
     "hud.nomosiki.match.authority": "Authority %s (+%s/s)",
     "hud.nomosiki.match.points": "Points %s/%s",
+    "hud.nomosiki.match.points_split": "Points %s | enemy %s",
     "hud.nomosiki.match.pop": "Pop %s/%s",
     "hud.nomosiki.match.hq": "HQ %s/%s | Enemy %s/%s",
     "hud.nomosiki.match.victory": "VICTORY",
-    "hud.nomosiki.match.defeat": "DEFEAT"
+    "hud.nomosiki.match.defeat": "DEFEAT",
+
+    "tooltip.nomosiki.rts.wargear": "%s — %s authority",
+    "tooltip.nomosiki.rts.reinforce": "Reinforce %s for %s",
+    "message.nomosiki.match.wargear_bought": "Wargear bought for %s authority.",
+    "message.nomosiki.match.wargear_owned": "This wargear is already bought.",
+    "message.nomosiki.match.wargear_slot": "That slot already has wargear.",
+    "message.nomosiki.match.wargear_denied": "This squad cannot take wargear.",
+    "message.nomosiki.match.reinforced": "Reinforced %s for %s authority.",
+    "message.nomosiki.match.reinforce_full": "The squad is full.",
+    "message.nomosiki.match.reinforce_denied": "This squad cannot be reinforced."
 }

@@ -21,7 +21,8 @@ public record MatchHudPayload(
 	byte yourSide,
 	int pop,
 	int popCap,
-	boolean showEnd
+	boolean showEnd,
+	byte raceId
 ) implements CustomPacketPayload {
 	public static final Type<MatchHudPayload> TYPE = new Type<>(NomosikiMod.id("match_hud"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, MatchHudPayload> CODEC = StreamCodec.of(
@@ -46,6 +47,7 @@ public record MatchHudPayload(
 		buf.writeVarInt(p.pop);
 		buf.writeVarInt(p.popCap);
 		buf.writeBoolean(p.showEnd);
+		buf.writeByte(p.raceId);
 	}
 
 	private static MatchHudPayload decode(RegistryFriendlyByteBuf buf) {
@@ -65,7 +67,8 @@ public record MatchHudPayload(
 			buf.readByte(),
 			buf.readVarInt(),
 			buf.readVarInt(),
-			buf.readBoolean()
+			buf.readBoolean(),
+			buf.readByte()
 		);
 	}
 

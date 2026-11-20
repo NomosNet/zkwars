@@ -14,13 +14,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.UUID;
 
 /**
- * Total War-style circular command buttons above the tactical card strip.
+ * Squad command grid on the right of the tactical view, plus match wargear and reinforce.
  */
 public final class TacticalCommandBar {
 	public static final int BUTTON_SIZE = 24;
@@ -70,25 +72,30 @@ public final class TacticalCommandBar {
 			if (!this.hitBar(mouseX, mouseY)) {
 				return -1;
 			}
-			for (int i = 0; i < this.buttonCount; i++) {
-				int x0 = this.left + i * (BUTTON_SIZE + GAP);
-				if (mouseX >= x0 && mouseX < x0 + BUTTON_SIZE) {
-					return i;
-				}
+			int col = (int) ((mouseX - this.left - TacticalChrome.GRID_PAD) / TacticalChrome.GRID_CELL);
+			int row = (int) ((mouseY - this.top - TacticalChrome.GRID_PAD) / TacticalChrome.GRID_CELL);
+			if (col < 0 || col >= TacticalChrome.GRID_COLS || row < 0) {
+				return -1;
 			}
-			return -1;
+			int index = row * TacticalChrome.GRID_COLS + col;
+			if (index < 0 || index >= this.buttonCount) {
+				return -1;
+			}
+			return index;
 		}
 
 		public int buttonCenterX(int index) {
-			return this.left + index * (BUTTON_SIZE + GAP) + BUTTON_SIZE / 2;
+			int col = index % TacticalChrome.GRID_COLS;
+			return this.left + TacticalChrome.GRID_PAD + col * TacticalChrome.GRID_CELL + TacticalChrome.GRID_CELL / 2;
 		}
 
-		public int buttonCenterY() {
-			return this.top + BUTTON_SIZE / 2;
+		public int buttonCenterY(int index) {
+			int row = index / TacticalChrome.GRID_COLS;
+			return this.top + TacticalChrome.GRID_PAD + row * TacticalChrome.GRID_CELL + TacticalChrome.GRID_CELL / 2;
 		}
 	}
 
-	public static int visibleCount() {
+	public static int commandCount() {
 		int count = COUNT;
 		if (hasNinjaSelection()) {
 			count++;
@@ -98,6 +105,14 @@ public final class TacticalCommandBar {
 		}
 		if (hasArtilleristSelection()) {
 			count++;
+		}
+		return count;
+	}
+
+	public static int visibleCount() {
+		int count = commandCount();
+		if (matchSquad().isPresent()) {
+			count += 1 + matchUpgrades().size();
 		}
 		return count;
 	}
@@ -125,11 +140,14 @@ public final class TacticalCommandBar {
 	}
 
 	public static Layout layout(int screenWidth, int screenHeight) {
-		int count = visibleCount();
-		int width = count * BUTTON_SIZE + (count - 1) * GAP;
-		int height = BUTTON_SIZE + LABEL_H;
-		int top = screenHeight - SquadCardRenderer.CARD_H - STRIP_MARGIN - ClanArmyClientState.rosterHeight() - BAR_GAP - height;
-		return new Layout(STRIP_MARGIN, top, width, height, count);
+		int count = Math.max(1, visibleCount());
+		return new Layout(
+			TacticalChrome.gridLeft(screenWidth),
+			TacticalChrome.gridTop(screenHeight, count),
+			TacticalChrome.gridWidth(),
+			TacticalChrome.gridHeight(count),
+			count
+		);
 	}
 
 	public static boolean click(Layout layout, double mouseX, double mouseY) {
@@ -154,11 +172,27 @@ public final class TacticalCommandBar {
 			RtsOrderInputHandler.onBombardButton();
 		} else if (id == siegeMountButtonIndex()) {
 			RtsOrderInputHandler.toggleSiegeMount(Minecraft.getInstance());
+		} else if (id == reinforceIndex()) {
+			matchSquad().ifPresent(row ->
+				net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+					new com.nomosiki.network.match.payload.c2s.MatchReinforcePayload(row.squadId())
+				));
+		} else if (wargearAt(id) != null) {
+			var upgrade = wargearAt(id);
+			matchSquad().ifPresent(row -> {
+				if (upgrade != null && wargearEnabled(row, upgrade)) {
+					net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+						new com.nomosiki.network.match.payload.c2s.MatchWargearPayload(row.squadId(), upgrade.id())
+					);
+				}
+			});
 		}
 		return true;
 	}
 
 	public static int render(GuiGraphics graphics, Font font, Minecraft mc, Layout layout, int mouseX, int mouseY) {
+		graphics.fill(layout.left, layout.top, layout.left + layout.width, layout.top + layout.height, 0xCC1A100C);
+		graphics.renderOutline(layout.left, layout.top, layout.width, layout.height, 0xFFD4A574);
 		boolean selected = hasSelectedSquads();
 		boolean canShield = selected && hasShieldCapableSelection(mc);
 		int hovered = layout.hitButton(mouseX, mouseY);
@@ -192,6 +226,26 @@ public final class TacticalCommandBar {
 			boolean mounted = artillery && hasSiegeMountedSelection(mc);
 			drawSiegeMountButton(graphics, font, layout, siegeIndex, mounted, hovered == siegeIndex, artillery);
 		}
+		matchSquad().ifPresent(row -> {
+			int reinforce = reinforceIndex();
+			if (reinforce >= 0) {
+				drawItemButton(
+					graphics,
+					layout,
+					reinforce,
+					new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD),
+					hovered == reinforce,
+					reinforceEnabled(row)
+				);
+			}
+			java.util.List<com.nomosiki.match.MatchWargear.Upgrade> upgrades = matchUpgrades();
+			for (int i = 0; i < upgrades.size(); i++) {
+				int index = wargearStart() + i;
+				com.nomosiki.match.MatchWargear.Upgrade upgrade = upgrades.get(i);
+				boolean owned = row.wargearIds().contains(upgrade.id());
+				drawItemButton(graphics, layout, index, upgrade.stack(), hovered == index || owned, wargearEnabled(row, upgrade) || owned);
+			}
+		});
 		return hovered;
 	}
 
@@ -256,6 +310,13 @@ public final class TacticalCommandBar {
 						: "tooltip.nomosiki.rts.cmd.siege_mount"
 				)
 			);
+		}
+		if (buttonId == reinforceIndex()) {
+			return matchSquad().map(TacticalCommandBar::reinforceTooltip).orElse(List.of());
+		}
+		com.nomosiki.match.MatchWargear.Upgrade upgrade = wargearAt(buttonId);
+		if (upgrade != null) {
+			return matchSquad().map(row -> wargearTooltip(row, upgrade)).orElse(List.of());
 		}
 		return List.of();
 	}
@@ -329,12 +390,11 @@ public final class TacticalCommandBar {
 
 	private static void drawSpacingButton(GuiGraphics graphics, Font font, Layout layout, int presetIndex, boolean hovered, boolean active) {
 		int cx = layout.buttonCenterX(SPACING);
-		int cy = layout.buttonCenterY();
+		int cy = layout.buttonCenterY(SPACING);
 		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
 		drawIcon(graphics, ICON_SPACING, cx, cy, active);
 		Component icon = Component.literal(String.valueOf(presetIndex + 1));
 		drawCenteredIcon(graphics, font, icon, cx, cy, active);
-		drawLabel(graphics, font, Component.translatable(spacingLabelKey(presetIndex)), cx, layout.top + BUTTON_SIZE, active);
 	}
 
 	private static void drawStanceButton(
@@ -346,13 +406,12 @@ public final class TacticalCommandBar {
 		boolean active
 	) {
 		int cx = layout.buttonCenterX(STANCE);
-		int cy = layout.buttonCenterY();
+		int cy = layout.buttonCenterY(STANCE);
 		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
 		if (active) {
 			fillInnerDisc(graphics, cx, cy, 9, stanceTint(stance));
 		}
 		drawIcon(graphics, stanceIcon(stance), cx, cy, active);
-		drawLabel(graphics, font, stanceShortLabel(stance), cx, layout.top + BUTTON_SIZE, active);
 	}
 
 	private static void drawShieldButton(
@@ -364,13 +423,9 @@ public final class TacticalCommandBar {
 		boolean active
 	) {
 		int cx = layout.buttonCenterX(SHIELD);
-		int cy = layout.buttonCenterY();
+		int cy = layout.buttonCenterY(SHIELD);
 		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, active && up);
 		drawIcon(graphics, ICON_SHIELD, cx, cy, active);
-		Component label = Component.translatable(up
-			? "overlay.nomosiki.rts.cmd.shield.up"
-			: "overlay.nomosiki.rts.cmd.shield.down");
-		drawLabel(graphics, font, label, cx, layout.top + BUTTON_SIZE, active);
 	}
 
 	private static void drawFormationButton(
@@ -382,10 +437,9 @@ public final class TacticalCommandBar {
 		boolean active
 	) {
 		int cx = layout.buttonCenterX(FORMATION);
-		int cy = layout.buttonCenterY();
+		int cy = layout.buttonCenterY(FORMATION);
 		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
 		drawIcon(graphics, formationIcon(formation), cx, cy, active);
-		drawLabel(graphics, font, formationShortLabel(formation), cx, layout.top + BUTTON_SIZE, active);
 	}
 
 	private static void drawMarkButton(
@@ -397,10 +451,9 @@ public final class TacticalCommandBar {
 		boolean active
 	) {
 		int cx = layout.buttonCenterX(index);
-		int cy = layout.buttonCenterY();
+		int cy = layout.buttonCenterY(index);
 		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, false);
 		drawIcon(graphics, ICON_MARK, cx, cy, active);
-		drawLabel(graphics, font, Component.translatable("overlay.nomosiki.rts.cmd.mark"), cx, layout.top + BUTTON_SIZE, active);
 	}
 
 	private static void drawBombardButton(
@@ -415,15 +468,9 @@ public final class TacticalCommandBar {
 		boolean active
 	) {
 		int cx = layout.buttonCenterX(index);
-		int cy = layout.buttonCenterY();
+		int cy = layout.buttonCenterY(index);
 		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, active && aiming);
 		drawIcon(graphics, ICON_BOMBARD, cx, cy, active);
-		Component label = aiming
-			? Component.translatable("overlay.nomosiki.rts.cmd.bombard.radius", zoneRadius)
-			: zoneSet
-				? Component.translatable("overlay.nomosiki.rts.cmd.bombard.clear")
-				: Component.translatable("overlay.nomosiki.rts.cmd.bombard.idle");
-		drawLabel(graphics, font, label, cx, layout.top + BUTTON_SIZE, active);
 	}
 
 	private static void drawSiegeMountButton(
@@ -436,13 +483,9 @@ public final class TacticalCommandBar {
 		boolean active
 	) {
 		int cx = layout.buttonCenterX(index);
-		int cy = layout.buttonCenterY();
+		int cy = layout.buttonCenterY(index);
 		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, active, active && mounted);
 		drawIcon(graphics, ICON_SIEGE_MOUNT, cx, cy, active);
-		Component label = Component.translatable(mounted
-			? "overlay.nomosiki.rts.cmd.siege_dismount"
-			: "overlay.nomosiki.rts.cmd.siege_mount");
-		drawLabel(graphics, font, label, cx, layout.top + BUTTON_SIZE, active);
 	}
 
 	private static void drawIcon(GuiGraphics graphics, ResourceLocation texture, int cx, int cy, boolean active) {
@@ -573,5 +616,118 @@ public final class TacticalCommandBar {
 			case AGGRESSIVE -> 0xFFC45C7A;
 			case RAID -> 0xFF8B2E3A;
 		};
+	}
+
+	private static Optional<SquadArmyStatePayload.SquadRow> matchSquad() {
+		if (!TacticalChrome.matchRunning()) {
+			return Optional.empty();
+		}
+		return RtsClientState.activeRow().filter(row ->
+			row.matchRole() != null && !row.matchRole().isEmpty() && RtsClientState.isSelected(row.squadId()));
+	}
+
+	private static List<com.nomosiki.match.MatchWargear.Upgrade> matchUpgrades() {
+		return matchSquad()
+			.map(row -> com.nomosiki.match.MatchWargear.forRole(com.nomosiki.match.MatchRecruitment.Role.fromId(row.matchRole())))
+			.orElse(List.of());
+	}
+
+	private static int reinforceIndex() {
+		return matchSquad().isPresent() ? commandCount() : -1;
+	}
+
+	private static int wargearStart() {
+		return matchSquad().isPresent() ? commandCount() + 1 : -1;
+	}
+
+	@Nullable
+	private static com.nomosiki.match.MatchWargear.Upgrade wargearAt(int index) {
+		int start = wargearStart();
+		if (start < 0 || index < start) {
+			return null;
+		}
+		List<com.nomosiki.match.MatchWargear.Upgrade> upgrades = matchUpgrades();
+		int offset = index - start;
+		if (offset < 0 || offset >= upgrades.size()) {
+			return null;
+		}
+		return upgrades.get(offset);
+	}
+
+	private static boolean wargearEnabled(SquadArmyStatePayload.SquadRow row, com.nomosiki.match.MatchWargear.Upgrade upgrade) {
+		if (row.wargearIds().contains(upgrade.id())) {
+			return false;
+		}
+		for (String owned : row.wargearIds()) {
+			com.nomosiki.match.MatchWargear.Upgrade other = com.nomosiki.match.MatchWargear.byId(owned);
+			if (other != null && other.slot() == upgrade.slot()) {
+				return false;
+			}
+		}
+		com.nomosiki.network.match.payload.s2c.MatchHudPayload hud = com.nomosiki.client.match.MatchClient.last();
+		return hud.authority() >= upgrade.priced(com.nomosiki.entity.NomosikRace.fromId(hud.raceId()));
+	}
+
+	private static boolean reinforceEnabled(SquadArmyStatePayload.SquadRow row) {
+		com.nomosiki.match.MatchRecruitment.Role role = com.nomosiki.match.MatchRecruitment.Role.fromId(row.matchRole());
+		if (role == null) {
+			return false;
+		}
+		int missing = com.nomosiki.match.MatchRecruitment.squadSize(role) - row.alive();
+		if (missing <= 0) {
+			return false;
+		}
+		com.nomosiki.network.match.payload.s2c.MatchHudPayload hud = com.nomosiki.client.match.MatchClient.last();
+		com.nomosiki.entity.NomosikRace race = com.nomosiki.entity.NomosikRace.fromId(hud.raceId());
+		int cost = com.nomosiki.match.MatchRecruitment.reinforceCost(role, race, missing);
+		int pop = com.nomosiki.match.MatchRecruitment.reinforcePop(role, missing);
+		return hud.authority() >= cost && hud.pop() + pop <= hud.popCap();
+	}
+
+	private static List<Component> reinforceTooltip(SquadArmyStatePayload.SquadRow row) {
+		com.nomosiki.match.MatchRecruitment.Role role = com.nomosiki.match.MatchRecruitment.Role.fromId(row.matchRole());
+		if (role == null) {
+			return List.of();
+		}
+		int missing = Math.max(0, com.nomosiki.match.MatchRecruitment.squadSize(role) - row.alive());
+		com.nomosiki.network.match.payload.s2c.MatchHudPayload hud = com.nomosiki.client.match.MatchClient.last();
+		int cost = com.nomosiki.match.MatchRecruitment.reinforceCost(role, com.nomosiki.entity.NomosikRace.fromId(hud.raceId()), missing);
+		return List.of(Component.translatable("tooltip.nomosiki.rts.reinforce", missing, cost));
+	}
+
+	private static List<Component> wargearTooltip(
+		SquadArmyStatePayload.SquadRow row,
+		com.nomosiki.match.MatchWargear.Upgrade upgrade
+	) {
+		com.nomosiki.network.match.payload.s2c.MatchHudPayload hud = com.nomosiki.client.match.MatchClient.last();
+		int cost = upgrade.priced(com.nomosiki.entity.NomosikRace.fromId(hud.raceId()));
+		List<Component> tip = new java.util.ArrayList<>();
+		tip.add(Component.translatable("tooltip.nomosiki.rts.wargear", upgrade.stack().getHoverName(), cost));
+		if (row.wargearIds().contains(upgrade.id())) {
+			tip.add(Component.translatable("message.nomosiki.match.wargear_owned"));
+		} else if (!wargearEnabled(row, upgrade) && hud.authority() < cost) {
+			tip.add(Component.translatable("message.nomosiki.match.need_authority", cost));
+		} else if (!wargearEnabled(row, upgrade)) {
+			tip.add(Component.translatable("message.nomosiki.match.wargear_slot"));
+		}
+		return tip;
+	}
+
+	private static void drawItemButton(
+		GuiGraphics graphics,
+		Layout layout,
+		int index,
+		net.minecraft.world.item.ItemStack stack,
+		boolean hovered,
+		boolean enabled
+	) {
+		int cx = layout.buttonCenterX(index);
+		int cy = layout.buttonCenterY(index);
+		SakuraStyle.drawCircleButton(graphics, cx, cy, BUTTON_SIZE / 2, hovered, enabled, hovered && enabled);
+		if (!enabled) {
+			graphics.setColor(0.45f, 0.45f, 0.45f, 1.0f);
+		}
+		graphics.renderItem(stack, cx - 8, cy - 8);
+		graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }

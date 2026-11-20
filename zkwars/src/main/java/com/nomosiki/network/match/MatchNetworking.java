@@ -6,6 +6,8 @@ import com.nomosiki.match.MatchRecruitment;
 import com.nomosiki.match.MatchService;
 import com.nomosiki.network.match.payload.c2s.MatchBuildPlacePayload;
 import com.nomosiki.network.match.payload.c2s.MatchRecruitPayload;
+import com.nomosiki.network.match.payload.c2s.MatchReinforcePayload;
+import com.nomosiki.network.match.payload.c2s.MatchWargearPayload;
 import com.nomosiki.network.match.payload.s2c.MatchHudPayload;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -20,6 +22,8 @@ public final class MatchNetworking {
 		PayloadTypeRegistry.playS2C().register(MatchHudPayload.TYPE, MatchHudPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(MatchRecruitPayload.TYPE, MatchRecruitPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(MatchBuildPlacePayload.TYPE, MatchBuildPlacePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(MatchWargearPayload.TYPE, MatchWargearPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(MatchReinforcePayload.TYPE, MatchReinforcePayload.CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(MatchRecruitPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
@@ -46,6 +50,22 @@ public final class MatchNetworking {
 					true
 				);
 			});
+		});
+
+		ServerPlayNetworking.registerGlobalReceiver(MatchWargearPayload.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+			context.server().execute(() -> player.displayClientMessage(
+				MatchService.get(player.server).buyWargear(player, payload.squadId(), payload.upgradeId()),
+				true
+			));
+		});
+
+		ServerPlayNetworking.registerGlobalReceiver(MatchReinforcePayload.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+			context.server().execute(() -> player.displayClientMessage(
+				MatchService.get(player.server).reinforce(player, payload.squadId()),
+				true
+			));
 		});
 	}
 }

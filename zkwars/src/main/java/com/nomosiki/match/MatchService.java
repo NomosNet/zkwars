@@ -6,6 +6,10 @@ import com.nomosiki.entity.NomosikRace;
 import com.nomosiki.match.entity.BuildingHeartEntity;
 import com.nomosiki.match.entity.CaptureBeaconEntity;
 import com.nomosiki.network.match.payload.s2c.MatchHudPayload;
+import com.nomosiki.network.squad.SquadNetworking;
+import com.nomosiki.squad.NomosikSquad;
+import com.nomosiki.squad.SquadManager;
+import com.nomosiki.squad.SquadService;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -439,14 +443,7 @@ public final class MatchService {
 			}
 		}
 		for (BlockPos pos : new ArrayList<>(this.session.trackedBlocks)) {
-			var state = level.getBlockState(pos);
-			if (state.is(Blocks.IRON_BLOCK)
-				|| state.is(Blocks.STONE_BRICKS)
-				|| state.is(Blocks.GOLD_BLOCK)
-				|| state.is(Blocks.CRACKED_STONE_BRICKS)
-				|| state.is(Blocks.COBBLESTONE)
-				|| state.is(Blocks.OAK_PLANKS)
-				|| state.is(Blocks.STONE_SLAB)) {
+			if (BuildingHeartEntity.isShellBlock(level.getBlockState(pos))) {
 				level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 			}
 		}
@@ -566,6 +563,89 @@ public final class MatchService {
 		return Component.translatable("message.nomosiki.match.recruited", role.id(), cost);
 	}
 
+	public Component buyWargear(ServerPlayer player, UUID squadId, String upgradeId) {
+		Byte side = this.sideOfPlayer(player.getUUID());
+		if (side == null || this.session.phase != MatchPhase.RUNNING) {
+			return Component.translatable("message.nomosiki.match.not_in_match");
+		}
+		MatchWargear.Upgrade upgrade = MatchWargear.byId(upgradeId);
+		if (upgrade == null) {
+			return Component.translatable("message.nomosiki.match.wargear_denied");
+		}
+		SquadManager manager = SquadService.get(player.server);
+		if (!manager.isCommanderOf(player, squadId)) {
+			return Component.translatable("message.nomosiki.match.wargear_denied");
+		}
+		NomosikSquad squad = manager.data().getSquad(squadId).orElse(null);
+		if (squad == null || !upgrade.role().id().equals(squad.matchRole())) {
+			return Component.translatable("message.nomosiki.match.wargear_denied");
+		}
+		if (squad.hasWargear(upgrade.id())) {
+			return Component.translatable("message.nomosiki.match.wargear_owned");
+		}
+		if (MatchWargear.slotTaken(squad, upgrade)) {
+			return Component.translatable("message.nomosiki.match.wargear_slot");
+		}
+		NomosikRace race = this.session.raceOfSide(side);
+		int cost = upgrade.priced(race);
+		if (this.session.getAuthority(side) < cost) {
+			return Component.translatable("message.nomosiki.match.need_authority", cost);
+		}
+		this.session.addAuthority(side, -cost);
+		squad.addWargear(upgrade.id());
+		manager.data().setDirty();
+		MatchWargear.equipAll(squad, manager.resolveMembersInLevel(player.serverLevel(), squad.id()));
+		SquadNetworking.sendArmyState(player, manager, true);
+		this.syncHud(false);
+		return Component.translatable("message.nomosiki.match.wargear_bought", cost);
+	}
+
+	public Component reinforce(ServerPlayer player, UUID squadId) {
+		Byte side = this.sideOfPlayer(player.getUUID());
+		if (side == null || this.session.phase != MatchPhase.RUNNING) {
+			return Component.translatable("message.nomosiki.match.not_in_match");
+		}
+		SquadManager manager = SquadService.get(player.server);
+		if (!manager.isCommanderOf(player, squadId)) {
+			return Component.translatable("message.nomosiki.match.reinforce_denied");
+		}
+		NomosikSquad squad = manager.data().getSquad(squadId).orElse(null);
+		MatchRecruitment.Role role = squad == null ? null : MatchRecruitment.Role.fromId(squad.matchRole());
+		if (squad == null || role == null) {
+			return Component.translatable("message.nomosiki.match.reinforce_denied");
+		}
+		int alive = 0;
+		for (NomosikEntity member : manager.resolveMembersInLevel(player.serverLevel(), squad.id())) {
+			if (member.isAlive()) {
+				alive++;
+			}
+		}
+		int missing = MatchRecruitment.squadSize(role) - alive;
+		if (missing <= 0) {
+			return Component.translatable("message.nomosiki.match.reinforce_full");
+		}
+		NomosikRace race = this.session.raceOfSide(side);
+		int cost = MatchRecruitment.reinforceCost(role, race, missing);
+		int popCost = MatchRecruitment.reinforcePop(role, missing);
+		if (this.session.getPop(side) + popCost > POP_CAP) {
+			return Component.translatable("message.nomosiki.match.pop_full");
+		}
+		if (this.session.getAuthority(side) < cost) {
+			return Component.translatable("message.nomosiki.match.need_authority", cost);
+		}
+		int spawned = MatchSpawner.reinforceSquad(player, this.session, squad, role, missing, race);
+		if (spawned <= 0) {
+			return Component.translatable("message.nomosiki.match.recruit_failed");
+		}
+		int spent = MatchRecruitment.reinforceCost(role, race, spawned);
+		this.session.addAuthority(side, -spent);
+		this.session.setPop(side, this.session.getPop(side) + role.pop() * spawned);
+		MatchWargear.equipAll(squad, manager.resolveMembersInLevel(player.serverLevel(), squad.id()));
+		SquadNetworking.sendArmyState(player, manager, true);
+		this.syncHud(false);
+		return Component.translatable("message.nomosiki.match.reinforced", spawned, spent);
+	}
+
 	public Component status(ServerPlayer player) {
 		return Component.translatable(
 			"message.nomosiki.match.status",
@@ -626,7 +706,10 @@ public final class MatchService {
 				yourSide,
 				pop,
 				POP_CAP,
-				showEnd && yourSide != CaptureBeaconEntity.SIDE_NONE
+				showEnd && yourSide != CaptureBeaconEntity.SIDE_NONE,
+				yourSide == CaptureBeaconEntity.SIDE_NONE
+					? com.nomosiki.entity.NomosikRace.HUMAN.id()
+					: this.session.raceOfSide(yourSide).id()
 			));
 		}
 	}

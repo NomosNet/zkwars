@@ -161,6 +161,14 @@ public final class TacticalCameraController {
 		}
 	}
 
+	public static void focusAt(double x, double z) {
+		if (!active) {
+			return;
+		}
+		focusX = x;
+		focusZ = z;
+	}
+
 	public static double cameraX() {
 		return focusX;
 	}

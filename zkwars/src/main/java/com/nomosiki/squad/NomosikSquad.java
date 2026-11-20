@@ -22,6 +22,9 @@ public final class NomosikSquad {
 	/** Empty means display / persistence layer may derive an auto-name from {@link #type()}. */
 	private String name;
 	private byte iconId;
+	/** Match recruitment role id, empty outside a match squad. */
+	private String matchRole = "";
+	private final List<String> wargearIds = new ArrayList<>();
 
 	public NomosikSquad(UUID id, UUID commanderId, SquadType type) {
 		this(id, commanderId, type, new ArrayList<>(), false, "", (byte) 0);
@@ -80,6 +83,29 @@ public final class NomosikSquad {
 
 	public void setIconId(byte iconId) {
 		this.iconId = iconId;
+	}
+
+	public String matchRole() {
+		return this.matchRole;
+	}
+
+	public void setMatchRole(String matchRole) {
+		this.matchRole = matchRole == null ? "" : matchRole;
+	}
+
+	public List<String> wargearIdsView() {
+		return List.copyOf(this.wargearIds);
+	}
+
+	public boolean hasWargear(String id) {
+		return id != null && this.wargearIds.contains(id);
+	}
+
+	public void addWargear(String id) {
+		if (id == null || id.isBlank() || this.wargearIds.contains(id)) {
+			return;
+		}
+		this.wargearIds.add(id);
 	}
 
 	public List<UUID> memberEntityIdsView() {

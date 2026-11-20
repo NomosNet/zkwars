@@ -36,7 +36,9 @@ public record SquadArmyStatePayload(Optional<UUID> activeSquadId, List<SquadArmy
 		List<BlockPos> waypoints,
 		boolean hasFireZone,
 		BlockPos fireAnchor,
-		int fireRadius
+		int fireRadius,
+		String matchRole,
+		List<String> wargearIds
 	) {
 	}
 
@@ -81,6 +83,12 @@ public record SquadArmyStatePayload(Optional<UUID> activeSquadId, List<SquadArmy
 			for (int i = 0; i < waypointCount; i++) {
 				BlockPos.STREAM_CODEC.encode(buf, row.waypoints().get(i));
 			}
+			buf.writeUtf(row.matchRole() == null ? "" : row.matchRole(), 32);
+			int gearCount = Math.min(row.wargearIds().size(), 8);
+			buf.writeVarInt(gearCount);
+			for (int g = 0; g < gearCount; g++) {
+				buf.writeUtf(row.wargearIds().get(g), 32);
+			}
 		}
 		buf.writeVarInt(p.tickId);
 	}
@@ -117,10 +125,16 @@ public record SquadArmyStatePayload(Optional<UUID> activeSquadId, List<SquadArmy
 				parsed.add(BlockPos.STREAM_CODEC.decode(buf));
 			}
 			List<BlockPos> waypoints = List.copyOf(parsed);
+			String matchRole = buf.readUtf(32);
+			int gearCount = Math.min(buf.readVarInt(), 8);
+			List<String> wargearIds = new ArrayList<>(gearCount);
+			for (int g = 0; g < gearCount; g++) {
+				wargearIds.add(buf.readUtf(32));
+			}
 			rows.add(new SquadRow(
 				squadId, typeId, iconId, name, alive, total, avgHealthPct, orderId, combatModeId, formationId,
 				formationSpacing, formationMaxInRow, centerX, centerY, centerZ, distanceToPlayer, rangedFireModeId, shieldStance, waypoints,
-				hasFireZone, fireAnchor, fireRadius
+				hasFireZone, fireAnchor, fireRadius, matchRole, List.copyOf(wargearIds)
 			));
 		}
 		int tickId = buf.readVarInt();

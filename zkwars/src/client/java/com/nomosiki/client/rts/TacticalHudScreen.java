@@ -6,10 +6,10 @@ import com.nomosiki.client.SquadCommandClient;
 import com.nomosiki.client.gui.SakuraStyle;
 import com.nomosiki.client.match.MatchClient;
 import com.nomosiki.client.match.MatchClientState;
-import com.nomosiki.client.match.MatchHqScreen;
 import com.nomosiki.config.NomosikiConfig;
 import com.nomosiki.entity.SquadOrder;
 import com.nomosiki.match.MatchPhase;
+import com.nomosiki.match.MatchRecruitment;
 import com.nomosiki.match.entity.BuildingHeartEntity;
 import com.nomosiki.network.match.payload.c2s.MatchBuildPlacePayload;
 import com.nomosiki.network.squad.payload.c2s.command.SquadDeployFormationPayload;
@@ -106,8 +106,10 @@ public class TacticalHudScreen extends Screen {
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		super.render(graphics, mouseX, mouseY, partialTick);
+		TacticalResourceBar.render(graphics, this.font, this.width);
 		this.renderHint(graphics);
 		this.renderSquadBanners(graphics, mouseX, mouseY);
+		TacticalMinimap.render(graphics, this.minecraft);
 		this.renderSquadCards(graphics, mouseX, mouseY);
 		this.renderRoster(graphics, mouseX, mouseY);
 		this.renderGivePicker(graphics, mouseX, mouseY);
@@ -130,8 +132,17 @@ public class TacticalHudScreen extends Screen {
 		} else {
 			hint = Component.translatable("overlay.nomosiki.rts.hint_tactical_mouse");
 		}
-		SakuraStyle.drawCentered(graphics, this.font, title, this.width / 2, 8, SakuraStyle.TITLE);
-		SakuraStyle.drawCentered(graphics, this.font, hint, this.width / 2, 20, SakuraStyle.INK_MUTED);
+		int y = TacticalChrome.matchRunning() ? TacticalChrome.TOP_H + 4 : 8;
+		if (!TacticalChrome.matchRunning()) {
+			SakuraStyle.drawCentered(graphics, this.font, title, this.width / 2, y, SakuraStyle.TITLE);
+			y += 12;
+		}
+		boolean special = MatchClientState.buildPlaceMode()
+			|| RtsClientState.bombardDesignate()
+			|| selected == 0;
+		if (special || !TacticalChrome.matchRunning()) {
+			SakuraStyle.drawCentered(graphics, this.font, hint, this.width / 2, y, SakuraStyle.INK_MUTED);
+		}
 	}
 
 	private void renderSquadBanners(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -141,7 +152,7 @@ public class TacticalHudScreen extends Screen {
 		}
 		List<SquadBannerRenderer.Banner> banners = SquadBannerRenderer.collect(mc);
 		SquadBannerRenderer.render(graphics, this.font, banners, mouseX, mouseY);
-		if (TacticalCommandBar.layout(this.width, this.height).hitBar(mouseX, mouseY)
+		if (this.chromeBlocksTooltip(mouseX, mouseY)
 			|| (RtsClientState.hudVisible() && SquadCardRenderer.hitStrip(this.cardLayout(), mouseX, mouseY))) {
 			return;
 		}
@@ -151,6 +162,15 @@ public class TacticalHudScreen extends Screen {
 
 	private void renderCommandBar(GuiGraphics graphics, int mouseX, int mouseY) {
 		if (this.minecraft == null) {
+			return;
+		}
+		List<TacticalProductionGrid.Cell> cells = this.productionCells();
+		if (cells != null) {
+			TacticalProductionGrid.Layout layout = TacticalProductionGrid.layout(this.width, this.height, Math.max(1, cells.size()));
+			int hovered = TacticalProductionGrid.render(graphics, this.font, layout, cells, mouseX, mouseY);
+			if (hovered >= 0 && hovered < cells.size()) {
+				graphics.renderComponentTooltip(this.font, cells.get(hovered).tooltip(), mouseX, mouseY);
+			}
 			return;
 		}
 		TacticalCommandBar.Layout layout = TacticalCommandBar.layout(this.width, this.height);
@@ -243,10 +263,12 @@ public class TacticalHudScreen extends Screen {
 	}
 
 	private SquadCardRenderer.StripLayout cardLayout() {
-		int width = Math.max(80, this.width - STRIP_MARGIN * 2);
-		int top = this.height - SquadCardRenderer.CARD_H - STRIP_MARGIN;
 		return SquadCardRenderer.layoutStrip(
-			STRIP_MARGIN, top, width, this.shownRows().size(), this.shownScroll());
+			TacticalChrome.cardLeft(),
+			TacticalChrome.cardTop(this.height),
+			TacticalChrome.cardWidth(this.width),
+			this.shownRows().size(),
+			this.shownScroll());
 	}
 
 	@Override
@@ -257,11 +279,16 @@ public class TacticalHudScreen extends Screen {
 		if (button == 0 && this.clickRoster(mouseX, mouseY)) {
 			return true;
 		}
-		TacticalCommandBar.Layout commandLayout = TacticalCommandBar.layout(this.width, this.height);
-		if (commandLayout.hitBar(mouseX, mouseY)) {
+		if (this.clickCommandGrid(mouseX, mouseY, button)) {
+			return true;
+		}
+		if (TacticalChrome.hitMap(this.height, mouseX, mouseY)) {
 			if (button == 0) {
-				TacticalCommandBar.click(commandLayout, mouseX, mouseY);
+				TacticalMinimap.click(this.height, mouseX, mouseY);
 			}
+			return true;
+		}
+		if (TacticalChrome.hitTop(this.width, mouseX, mouseY)) {
 			return true;
 		}
 		SquadCardRenderer.StripLayout layout = this.cardLayout();
@@ -394,6 +421,7 @@ public class TacticalHudScreen extends Screen {
 	public void removed() {
 		FormationGhostRenderer.clear();
 		this.pendingGiveSquad = null;
+		TacticalSelection.clearBuilding();
 		ClanArmyClientState.clearWatch();
 		super.removed();
 	}
@@ -442,7 +470,7 @@ public class TacticalHudScreen extends Screen {
 		int rows = Math.max(1, targets.size());
 		int panelW = 140;
 		int panelH = rows * rowH + 4;
-		int x = STRIP_MARGIN;
+		int x = TacticalChrome.cardLeft();
 		int y = Math.max(28, TacticalCommandBar.layout(this.width, this.height).top() - panelH - 4);
 		graphics.fill(x, y, x + panelW, y + panelH, 0xEE2A1608);
 		graphics.renderOutline(x, y, panelW, panelH, 0xFFC47A1A);
@@ -469,7 +497,7 @@ public class TacticalHudScreen extends Screen {
 		int rows = Math.max(1, targets.size());
 		int panelW = 140;
 		int panelH = rows * rowH + 4;
-		int x = STRIP_MARGIN;
+		int x = TacticalChrome.cardLeft();
 		int y = Math.max(28, TacticalCommandBar.layout(this.width, this.height).top() - panelH - 4);
 		if (mouseX < x || mouseX >= x + panelW || mouseY < y || mouseY >= y + panelH) {
 			this.pendingGiveSquad = null;
@@ -491,16 +519,18 @@ public class TacticalHudScreen extends Screen {
 		if (!ClanArmyClientState.showsRoster() || this.minecraft == null || this.minecraft.player == null) {
 			return false;
 		}
-		int top = this.height - SquadCardRenderer.CARD_H - STRIP_MARGIN - ClanArmyClientState.ROSTER_H;
-		if (mouseY < top || mouseY >= top + ClanArmyClientState.ROSTER_H) {
+		int top = TacticalChrome.cardTop(this.height) - ClanArmyClientState.ROSTER_H;
+		int left = TacticalChrome.cardLeft();
+		int right = left + TacticalChrome.cardWidth(this.width);
+		if (mouseY < top || mouseY >= top + ClanArmyClientState.ROSTER_H || mouseX < left || mouseX >= right) {
 			return false;
 		}
 		if (this.rosterOverflow()) {
-			if (mouseX >= STRIP_MARGIN && mouseX < STRIP_MARGIN + 12 && this.rosterScroll > 0) {
+			if (mouseX >= left && mouseX < left + 12 && this.rosterScroll > 0) {
 				this.rosterScroll--;
 				return true;
 			}
-			if (mouseX >= this.width - STRIP_MARGIN - 12 && mouseX < this.width - STRIP_MARGIN) {
+			if (mouseX >= right - 12 && mouseX < right) {
 				this.rosterScroll++;
 				return true;
 			}
@@ -520,8 +550,7 @@ public class TacticalHudScreen extends Screen {
 			}
 			return true;
 		}
-		return mouseY >= top && mouseY < top + ClanArmyClientState.ROSTER_H
-			&& mouseX >= STRIP_MARGIN && mouseX < this.width - STRIP_MARGIN;
+		return true;
 	}
 
 	private List<ClanArmyRosterPayload.Member> giveTargets() {
@@ -541,7 +570,7 @@ public class TacticalHudScreen extends Screen {
 		for (ClanArmyRosterPayload.Member member : ClanArmyClientState.members()) {
 			total += this.font.width(this.rosterLabel(member)) + 10;
 		}
-		return total > this.width - STRIP_MARGIN * 2;
+		return total > TacticalChrome.cardWidth(this.width);
 	}
 
 	private List<NameButton> rosterButtons() {
@@ -550,10 +579,11 @@ public class TacticalHudScreen extends Screen {
 		if (members.isEmpty()) {
 			return buttons;
 		}
-		int top = this.height - SquadCardRenderer.CARD_H - STRIP_MARGIN - ClanArmyClientState.ROSTER_H;
+		int top = TacticalChrome.cardTop(this.height) - ClanArmyClientState.ROSTER_H;
 		boolean overflow = this.rosterOverflow();
-		int x = STRIP_MARGIN + (overflow ? 14 : 0);
-		int limit = this.width - STRIP_MARGIN - (overflow ? 14 : 0);
+		int left = TacticalChrome.cardLeft();
+		int x = left + (overflow ? 14 : 0);
+		int limit = left + TacticalChrome.cardWidth(this.width) - (overflow ? 14 : 0);
 		int start = Mth.clamp(this.rosterScroll, 0, Math.max(0, members.size() - 1));
 		this.rosterScroll = start;
 		for (int i = start; i < members.size(); i++) {
@@ -574,6 +604,7 @@ public class TacticalHudScreen extends Screen {
 	}
 
 	private void handleCardClick(List<SquadArmyStatePayload.SquadRow> rows, int cardIndex) {
+		TacticalSelection.clearBuilding();
 		UUID squadId = rows.get(cardIndex).squadId();
 		long now = System.currentTimeMillis();
 		boolean doubleClick = cardIndex == this.lastCardIndex && now - this.lastCardClickMs <= DOUBLE_CLICK_MS;
@@ -622,6 +653,7 @@ public class TacticalHudScreen extends Screen {
 			: SquadBannerRenderer.hitAt(this.minecraft, mouseX, mouseY);
 		if (banner.isPresent()) {
 			if (banner.get().owned()) {
+				TacticalSelection.clearBuilding();
 				UUID squadId = banner.get().squadId();
 				if (Screen.hasControlDown()) {
 					RtsClientState.toggleSelected(squadId);
@@ -634,6 +666,7 @@ public class TacticalHudScreen extends Screen {
 		}
 		Optional<UUID> squad = TacticalCursorPicking.ownedSquadAt(this.minecraft, mouseX, mouseY);
 		if (squad.isPresent()) {
+			TacticalSelection.clearBuilding();
 			if (Screen.hasControlDown()) {
 				RtsClientState.toggleSelected(squad.get());
 			} else {
@@ -646,11 +679,11 @@ public class TacticalHudScreen extends Screen {
 			? null
 			: TacticalCursorPicking.ownedBuildingAt(this.minecraft, mouseX, mouseY);
 		if (building != null
-			&& MatchClient.last().phase() == MatchPhase.RUNNING.id()
-			&& this.minecraft != null) {
-			this.minecraft.setScreen(new MatchHqScreen());
+			&& MatchClient.last().phase() == MatchPhase.RUNNING.id()) {
+			TacticalSelection.selectBuilding(building);
 			return;
 		}
+		TacticalSelection.clearBuilding();
 		RtsClientState.clearSelection();
 	}
 
@@ -695,6 +728,7 @@ public class TacticalHudScreen extends Screen {
 		double y0 = Math.min(this.pressY, mouseY);
 		double x1 = Math.max(this.pressX, mouseX);
 		double y1 = Math.max(this.pressY, mouseY);
+		TacticalSelection.clearBuilding();
 		List<UUID> hit = new ArrayList<>();
 		for (SquadArmyStatePayload.SquadRow row : RtsClientState.armySquads()) {
 			if (row.alive() <= 0) {
@@ -822,6 +856,72 @@ public class TacticalHudScreen extends Screen {
 		this.pressEnemySquadId = null;
 		this.pressEnemyIsPlayer = false;
 		this.pressFriendlyBanner = false;
+	}
+
+	private boolean chromeBlocksTooltip(int mouseX, int mouseY) {
+		if (TacticalChrome.hitMap(this.height, mouseX, mouseY) || TacticalChrome.hitTop(this.width, mouseX, mouseY)) {
+			return true;
+		}
+		return this.commandGridHit(mouseX, mouseY);
+	}
+
+	private boolean clickCommandGrid(double mouseX, double mouseY, int button) {
+		if (this.minecraft == null) {
+			return false;
+		}
+		List<TacticalProductionGrid.Cell> cells = this.productionCells();
+		if (cells != null) {
+			TacticalProductionGrid.Layout layout = TacticalProductionGrid.layout(this.width, this.height, Math.max(1, cells.size()));
+			if (!layout.hit(mouseX, mouseY)) {
+				return false;
+			}
+			if (button == 0) {
+				TacticalProductionGrid.click(layout, cells, mouseX, mouseY);
+			}
+			return true;
+		}
+		TacticalCommandBar.Layout commandLayout = TacticalCommandBar.layout(this.width, this.height);
+		if (!commandLayout.hitBar(mouseX, mouseY)) {
+			return false;
+		}
+		if (button == 0) {
+			TacticalCommandBar.click(commandLayout, mouseX, mouseY);
+		}
+		return true;
+	}
+
+	private boolean commandGridHit(double mouseX, double mouseY) {
+		if (this.minecraft == null) {
+			return false;
+		}
+		List<TacticalProductionGrid.Cell> cells = this.productionCells();
+		if (cells != null) {
+			int count = Math.max(1, cells.size());
+			return TacticalProductionGrid.layout(this.width, this.height, count).hit(mouseX, mouseY);
+		}
+		return TacticalCommandBar.layout(this.width, this.height).hitBar(mouseX, mouseY);
+	}
+
+	/**
+	 * Right-hand production grid: the selected building, or build cells when the active squad is workers.
+	 * Null keeps the squad command bar.
+	 */
+	@Nullable
+	private List<TacticalProductionGrid.Cell> productionCells() {
+		if (this.minecraft == null || !TacticalChrome.matchRunning()) {
+			return null;
+		}
+		BuildingHeartEntity building = TacticalSelection.building(this.minecraft);
+		if (building != null) {
+			return TacticalProductionGrid.cells(building);
+		}
+		boolean worker = RtsClientState.activeRow()
+			.map(row -> MatchRecruitment.Role.fromId(row.matchRole()) == MatchRecruitment.Role.WORKER)
+			.orElse(false);
+		if (worker) {
+			return TacticalProductionGrid.buildCells();
+		}
+		return null;
 	}
 
 	private void releaseGameCursor() {

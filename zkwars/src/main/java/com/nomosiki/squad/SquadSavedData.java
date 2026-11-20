@@ -3,6 +3,7 @@ package com.nomosiki.squad;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -55,7 +56,15 @@ public final class SquadSavedData extends SavedData {
 			}
 			String name = missingName ? type.name() + " #" + id.toString().substring(0, 4) : st.getString("Name");
 			byte iconId = missingIcon ? SquadManager.clampSquadIcon(type.id()) : SquadManager.clampSquadIcon(st.getByte("Icon"));
-			data.squads.put(id, new NomosikSquad(id, commander, type, members, reservePool, name, iconId));
+			NomosikSquad squad = new NomosikSquad(id, commander, type, members, reservePool, name, iconId);
+			if (st.contains("MatchRole", Tag.TAG_STRING)) {
+				squad.setMatchRole(st.getString("MatchRole"));
+			}
+			ListTag gear = st.getList("Wargear", Tag.TAG_STRING);
+			for (int g = 0; g < gear.size(); g++) {
+				squad.addWargear(gear.getString(g));
+			}
+			data.squads.put(id, squad);
 		}
 		ListTag active = root.getList("Active", Tag.TAG_COMPOUND);
 		for (int i = 0; i < active.size(); i++) {
@@ -81,6 +90,16 @@ public final class SquadSavedData extends SavedData {
 			st.putString("Name", s.name());
 			st.putByte("Icon", s.iconId());
 			st.putBoolean("Reserve", s.reservePool());
+			if (!s.matchRole().isEmpty()) {
+				st.putString("MatchRole", s.matchRole());
+			}
+			if (!s.wargearIdsView().isEmpty()) {
+				ListTag gear = new ListTag();
+				for (String id : s.wargearIdsView()) {
+					gear.add(StringTag.valueOf(id));
+				}
+				st.put("Wargear", gear);
+			}
 			ListTag mem = new ListTag();
 			for (UUID m : s.memberEntityIdsView()) {
 				CompoundTag mt = new CompoundTag();

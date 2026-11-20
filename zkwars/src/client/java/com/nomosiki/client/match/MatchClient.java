@@ -1,5 +1,6 @@
 package com.nomosiki.client.match;
 
+import com.nomosiki.client.rts.TacticalHudScreen;
 import com.nomosiki.match.MatchPhase;
 import com.nomosiki.network.match.payload.s2c.MatchHudPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -34,6 +35,15 @@ public final class MatchClient {
 		}
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.options.hideGui || mc.player == null) {
+			return;
+		}
+		if (mc.screen instanceof TacticalHudScreen) {
+			if (hud.showEnd()) {
+				Component end = hud.winnerSide() == hud.yourSide()
+					? Component.translatable("hud.nomosiki.match.victory")
+					: Component.translatable("hud.nomosiki.match.defeat");
+				graphics.drawCenteredString(mc.font, end, mc.getWindow().getGuiScaledWidth() / 2, 40, 0xFFFF55);
+			}
 			return;
 		}
 		int x = 8;
@@ -87,7 +97,7 @@ public final class MatchClient {
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0,
 			(byte) 0, (byte) -1, (byte) -1,
-			0, 100, false
+			0, 100, false, (byte) 0
 		);
 	}
 }

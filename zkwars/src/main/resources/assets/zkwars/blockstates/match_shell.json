@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "look=iron": { "model": "zkwars:block/match_shell_iron" },
+    "look=cobble": { "model": "zkwars:block/match_shell_cobble" },
+    "look=planks": { "model": "zkwars:block/match_shell_planks" },
+    "look=bricks": { "model": "zkwars:block/match_shell_bricks" },
+    "look=gold": { "model": "zkwars:block/match_shell_gold" },
+    "look=stone": { "model": "zkwars:block/match_shell_stone" },
+    "look=cracked": { "model": "zkwars:block/match_shell_cracked" }
+  }
+}
